@@ -1184,17 +1184,17 @@ function resetSyncedLocalData(){
     <div class="login-title">LOGIN GURU PIKET</div>
     <div class="login-subtitle">
       Masukkan nomor HP petugas untuk memulai scanner.<br>
-      Petugas yang login akan tercatat pada setiap scan.<br>Login pertama memerlukan internet; setelah itu dapat digunakan offline.
+      
     </div>
     <label class="login-label" for="petugasPhone">Nomor HP</label>
     <input id="petugasPhone" class="login-input" type="tel" inputmode="tel"
            autocomplete="tel" placeholder="Contoh: 08xxxxxxxxxx"
            onkeydown="if(event.key==='Enter') loginPetugas()">
     <div id="loginError" class="login-error"></div>
-    <button type="button" id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
+    <button id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
             onclick="loginPetugas()">🔐 MASUK</button>
 
-    <button type="button" id="refreshPetugasButton" class="btn secondary"
+    <button id="refreshPetugasButton" class="btn secondary"
             style="width:100%;margin-top:8px"
             onclick="manualRefreshPetugasMaster()">
       ↻ AMBIL DATA GURU
@@ -4256,102 +4256,6 @@ function escapeHTML(
 }
 
 </script>
-
-
-/* =====================================================
-   LOGIN BUTTON SAFETY BINDING
-===================================================== */
-(function(){
-
-  function bindLoginButtons(){
-
-    const loginButton =
-      document.getElementById(
-        'loginButton'
-      );
-
-    const refreshButton =
-      document.getElementById(
-        'refreshPetugasButton'
-      );
-
-    if(loginButton){
-
-      loginButton.onclick =
-        function(event){
-
-          event.preventDefault();
-          event.stopPropagation();
-
-          loginPetugas();
-
-          return false;
-
-        };
-
-    }
-
-    if(refreshButton){
-
-      refreshButton.onclick =
-        function(event){
-
-          event.preventDefault();
-          event.stopPropagation();
-
-          manualRefreshPetugasMaster();
-
-          return false;
-
-        };
-
-    }
-
-  }
-
-  if(
-    document.readyState ===
-    'loading'
-  ){
-
-    document.addEventListener(
-      'DOMContentLoaded',
-      bindLoginButtons
-    );
-
-  }
-  else{
-
-    bindLoginButtons();
-
-  }
-
-})();
-
-
-window.addEventListener(
-  'error',
-  function(event){
-
-    const box =
-      document.getElementById(
-        'loginError'
-      );
-
-    if(
-      box &&
-      event &&
-      event.message
-    ){
-
-      box.textContent =
-        'JavaScript error: ' +
-        event.message;
-
-    }
-
-  }
-);
 
 </body>
 </html>
