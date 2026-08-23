@@ -1191,10 +1191,10 @@ function resetSyncedLocalData(){
            autocomplete="tel" placeholder="Contoh: 08xxxxxxxxxx"
            onkeydown="if(event.key==='Enter') loginPetugas()">
     <div id="loginError" class="login-error"></div>
-    <button id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
+    <button type="button" id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
             onclick="loginPetugas()">🔐 MASUK</button>
 
-    <button id="refreshPetugasButton" class="btn secondary"
+    <button type="button" id="refreshPetugasButton" class="btn secondary"
             style="width:100%;margin-top:8px"
             onclick="manualRefreshPetugasMaster()">
       ↻ AMBIL DATA GURU
@@ -4248,6 +4248,102 @@ function escapeHTML(
 }
 
 </script>
+
+
+/* =====================================================
+   LOGIN BUTTON SAFETY BINDING
+===================================================== */
+(function(){
+
+  function bindLoginButtons(){
+
+    const loginButton =
+      document.getElementById(
+        'loginButton'
+      );
+
+    const refreshButton =
+      document.getElementById(
+        'refreshPetugasButton'
+      );
+
+    if(loginButton){
+
+      loginButton.onclick =
+        function(event){
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          loginPetugas();
+
+          return false;
+
+        };
+
+    }
+
+    if(refreshButton){
+
+      refreshButton.onclick =
+        function(event){
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          manualRefreshPetugasMaster();
+
+          return false;
+
+        };
+
+    }
+
+  }
+
+  if(
+    document.readyState ===
+    'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      bindLoginButtons
+    );
+
+  }
+  else{
+
+    bindLoginButtons();
+
+  }
+
+})();
+
+
+window.addEventListener(
+  'error',
+  function(event){
+
+    const box =
+      document.getElementById(
+        'loginError'
+      );
+
+    if(
+      box &&
+      event &&
+      event.message
+    ){
+
+      box.textContent =
+        'JavaScript error: ' +
+        event.message;
+
+    }
+
+  }
+);
 
 </body>
 </html>
