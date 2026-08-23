@@ -266,7 +266,7 @@ button{
 
 .mode-buttons{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(3,1fr);
   gap:8px;
 }
 
@@ -624,572 +624,6 @@ canvas{
   line-height:1.6;
 }
 
-
-/* LOGIN PETUGAS */
-.login-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:#020617dd;backdrop-filter:blur(14px)}
-.login-card{width:min(420px,100%);padding:20px;border:1px solid #ffffff22;border-radius:22px;background:linear-gradient(145deg,#13243a,#07111f);box-shadow:0 25px 80px #000b,inset 0 1px #fff3}
-.login-logo{width:58px;height:58px;margin:0 auto 10px;display:grid;place-items:center;border-radius:17px;font-weight:900;color:#fff;background:linear-gradient(145deg,#0ea5e9,#2563eb);box-shadow:0 10px 30px #0ea5e955}
-.login-title{text-align:center;font-size:19px;font-weight:900}.login-subtitle{text-align:center;color:var(--muted);font-size:10px;line-height:1.5;margin:6px 0 16px}
-.login-label{display:block;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;margin:10px 0 6px}
-.login-input{width:100%;padding:13px 12px;border-radius:12px;border:1px solid #ffffff1c;background:#020617;color:#fff;outline:none;font-size:14px}
-.login-input:focus{border-color:#38d9ff88;box-shadow:0 0 0 3px #38d9ff18}
-.login-error{min-height:18px;margin-top:8px;color:#fca5a5;font-size:10px;line-height:1.5}
-.petugas-bar{margin-top:10px;padding:9px 11px;border-radius:12px;background:#0ea5e912;border:1px solid #38d9ff22;font-size:9px;color:#bae6fd;line-height:1.5}
-.reset-btn{color:#fde68a;background:#f59e0b14;border:1px solid #f59e0b33}.danger-btn{color:#fecaca;background:#ef444418;border:1px solid #ef444433}
-
-
-/* =====================================================
-   LOGIN GURU PIKET
-===================================================== */
-
-async function manualRefreshPetugasMaster(){
-
-  const button =
-    document.getElementById(
-      'refreshPetugasButton'
-    );
-
-  const errorBox =
-    document.getElementById(
-      'loginError'
-    );
-
-  if(!navigator.onLine){
-
-    errorBox.textContent =
-      'Internet tidak tersedia. Hubungkan internet untuk mengambil data guru.';
-
-    return;
-
-  }
-
-  if(button){
-    button.disabled = true;
-    button.textContent = '⏳ MENGAMBIL...';
-  }
-
-  try{
-
-    await refreshPetugasMaster();
-
-    const rows =
-      await getAllPetugasLocal();
-
-    if(errorBox){
-
-      errorBox.textContent =
-        rows.length
-          ? rows.length +
-            ' data guru tersedia di perangkat. Silakan masukkan nomor HP.'
-          : 'Data guru belum ditemukan di server.';
-
-    }
-
-  }
-  catch(error){
-
-    if(errorBox){
-
-      errorBox.textContent =
-        error &&
-        error.message
-          ? error.message
-          : String(error);
-
-    }
-
-  }
-  finally{
-
-    if(button){
-
-      button.disabled = false;
-      button.textContent =
-        '↻ AMBIL DATA GURU';
-
-    }
-
-  }
-
-}
-
-function getAllPetugasLocal(){
-
-  return new Promise(
-    function(resolve,reject){
-
-      const tx =
-        db.transaction(
-          STORE_PETUGAS,
-          'readonly'
-        );
-
-      const request =
-        tx.objectStore(
-          STORE_PETUGAS
-        ).getAll();
-
-      request.onsuccess =
-        function(){
-
-          resolve(
-            request.result || []
-          );
-
-        };
-
-      request.onerror =
-        function(){
-
-          reject(
-            request.error
-          );
-
-        };
-
-    }
-  );
-
-}
-
-async function loginPetugas(){
-
-  const input = document.getElementById('petugasPhone');
-  const button = document.getElementById('loginButton');
-  const errorBox = document.getElementById('loginError');
-
-  if(!input || !button || !errorBox){
-    console.error('Elemen login tidak ditemukan.');
-    return;
-  }
-
-  const phone = normalizePhone(input.value);
-
-  errorBox.textContent = '';
-  window.__lastPetugasLoginError = '';
-
-  if(!phone){
-    errorBox.textContent = 'Nomor HP wajib diisi.';
-    input.focus();
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = '⏳ MEMERIKSA...';
-
-  try{
-
-    /*
-     * Login online:
-     * Code.gs mengembalikan:
-     * {ok:true, petugas:{...}}
-     */
-    if(navigator.onLine){
-
-      let response;
-
-      try{
-
-        response = await apiGet(
-          'loginPetugas',
-          {
-            phone: phone
-          }
-        );
-
-      }
-      catch(apiError){
-
-        console.error('API login:',apiError);
-
-        /*
-         * Tetap coba login dari cache lokal.
-         */
-        response = null;
-
-      }
-
-      if(
-        response &&
-        response.ok &&
-        response.petugas
-      ){
-
-        const petugas =
-          normalizePetugas(
-            response.petugas
-          );
-
-        if(!petugas.phone){
-          petugas.phone = phone;
-        }
-
-        await savePetugas(
-          petugas
-        );
-
-        setCurrentPetugas(
-          petugas
-        );
-
-        showInfo(
-          'Login berhasil. Petugas: ' +
-          (petugas.nama || phone)
-        );
-
-        return;
-
-      }
-
-      /*
-       * Jika server merespons tetapi login ditolak,
-       * simpan pesan server untuk ditampilkan jika
-       * cache lokal juga tidak menemukan nomor HP.
-       */
-      if(
-        response &&
-        response.ok === false &&
-        response.error
-      ){
-
-        window.__lastPetugasLoginError =
-          String(
-            response.error
-          );
-
-      }
-
-    }
-
-    /*
-     * Jika offline / API gagal:
-     * cari petugas yang sebelumnya sudah login
-     * pada perangkat ini.
-     */
-    const cached =
-      await getPetugasByPhone(
-        phone
-      );
-
-    if(cached){
-
-      setCurrentPetugas(
-        cached
-      );
-
-      showInfo(
-        'Mode offline aktif. Petugas: ' +
-        (cached.nama || phone)
-      );
-
-      return;
-
-    }
-
-    throw new Error(
-      navigator.onLine
-        ? (
-            window.__lastPetugasLoginError ||
-            'Nomor HP tidak terdaftar sebagai guru piket.'
-          )
-        : 'Nomor HP belum pernah diverifikasi saat online.'
-    );
-
-  }
-  catch(error){
-
-    console.error(
-      'Login petugas gagal:',
-      error
-    );
-
-    errorBox.textContent =
-      error &&
-      error.message
-        ? error.message
-        : String(error);
-
-  }
-  finally{
-
-    button.disabled = false;
-    button.textContent = '🔐 MASUK';
-
-  }
-
-}
-
-function normalizePhone(phone){
-
-  let value = String(phone || '')
-    .replace(/[^\d+]/g,'')
-    .trim();
-
-  if(value.startsWith('+62')){
-    value = '0' + value.substring(3);
-  }
-  else if(value.startsWith('62')){
-    value = '0' + value.substring(2);
-  }
-
-  return value;
-
-}
-
-function setCurrentPetugas(petugas){
-
-  currentPetugas =
-    normalizePetugas(
-      petugas
-    );
-
-  const nameEl =
-    document.getElementById(
-      'petugasNama'
-    );
-
-  const idEl =
-    document.getElementById(
-      'petugasId'
-    );
-
-  if(nameEl){
-    nameEl.textContent =
-      currentPetugas.nama ||
-      currentPetugas.phone ||
-      '-';
-  }
-
-  if(idEl){
-    idEl.textContent =
-      currentPetugas.id ||
-      '-';
-  }
-
-  const overlay =
-    document.getElementById(
-      'loginOverlay'
-    );
-
-  if(overlay){
-
-    overlay.classList.add(
-      'hidden'
-    );
-
-    overlay.style.display =
-      'none';
-
-    overlay.setAttribute(
-      'aria-hidden',
-      'true'
-    );
-
-  }
-
-  /*
-   * Pastikan area scanner terlihat setelah login.
-   */
-  const app =
-    document.getElementById(
-      'app'
-    );
-
-  if(app){
-    app.style.display = '';
-  }
-
-}
-
-function normalizePetugas(p){
-
-  return {
-    id:String(p.idPetugas||p.ID_PETUGAS||p.id||p.ID||'').trim(),
-    nama:String(p.nama||p.NAMA||p.namaPetugas||p.NAMA_PETUGAS||'').trim(),
-    phone:normalizePhone(p.phone||p.PHONE||p.noHp||p.NO_HP||p.nomorHp||p.NOMOR_HP||'')
-  };
-
-}
-
-function savePetugas(petugas){
-
-  return new Promise(function(resolve,reject){
-
-    const tx = db.transaction(STORE_PETUGAS,'readwrite');
-    tx.objectStore(STORE_PETUGAS).put(petugas);
-
-    tx.oncomplete=function(){resolve();};
-    tx.onerror=function(){reject(tx.error);};
-
-  });
-
-}
-
-function getPetugasByPhone(phone){
-
-  return new Promise(function(resolve,reject){
-
-    const tx = db.transaction(STORE_PETUGAS,'readonly');
-    const request = tx.objectStore(STORE_PETUGAS).getAll();
-
-    request.onsuccess=function(){
-
-      const rows = request.result || [];
-
-      resolve(
-        rows.find(function(row){
-          return normalizePhone(row.phone) === normalizePhone(phone);
-        }) || null
-      );
-
-    };
-
-    request.onerror=function(){reject(request.error);};
-
-  });
-
-}
-
-async function restorePetugasLogin(){
-
-  try{
-
-    const rows = await new Promise(function(resolve,reject){
-
-      const tx = db.transaction(STORE_PETUGAS,'readonly');
-      const request = tx.objectStore(STORE_PETUGAS).getAll();
-
-      request.onsuccess=function(){resolve(request.result||[]);};
-      request.onerror=function(){reject(request.error);};
-
-    });
-
-    if(rows.length === 1){
-
-      setCurrentPetugas(
-        rows[0]
-      );
-
-    }
-
-  }
-  catch(error){
-
-    console.log('Restore petugas:',error);
-
-  }
-
-}
-
-function logoutPetugas(){
-
-  stopScanner();
-
-  currentPetugas = null;
-
-  const overlay =
-    document.getElementById(
-      'loginOverlay'
-    );
-
-  if(overlay){
-
-    overlay.classList.remove(
-      'hidden'
-    );
-
-    overlay.style.display =
-      'flex';
-
-    overlay.setAttribute(
-      'aria-hidden',
-      'false'
-    );
-
-  }
-
-  const input =
-    document.getElementById(
-      'petugasPhone'
-    );
-
-  if(input){
-    input.value = '';
-    input.focus();
-  }
-
-  const errorBox =
-    document.getElementById(
-      'loginError'
-    );
-
-  if(errorBox){
-    errorBox.textContent = '';
-  }
-
-}
-
-function resetSyncedLocalData(){
-
-  getAllScans().then(function(scans){
-
-    const synced = scans.filter(function(item){
-      return item.status === 'SYNCED';
-    });
-
-    const pending = scans.filter(function(item){
-      return item.status === 'PENDING';
-    });
-
-    if(!synced.length){
-
-      showInfo(
-        'Tidak ada data SYNCED. ' +
-        pending.length +
-        ' data PENDING tetap aman.'
-      );
-
-      return;
-    }
-
-    if(!confirm(
-      'Reset ' + synced.length +
-      ' data yang sudah tersinkron dari perangkat ini?\n\n' +
-      'LOG_SCAN TIDAK akan dihapus.\n' +
-      'Data PENDING (' + pending.length + ') tetap aman.'
-    )) return;
-
-    const tx = db.transaction(STORE_SCAN,'readwrite');
-    const store = tx.objectStore(STORE_SCAN);
-
-    synced.forEach(function(item){
-      store.delete(item.transactionId);
-    });
-
-    tx.oncomplete=async function(){
-
-      await updateStats();
-
-      showInfo(
-        synced.length +
-        ' data SYNCED dibersihkan dari perangkat. LOG_SCAN tetap aman.'
-      );
-
-    };
-
-    tx.onerror=function(){
-
-      showError(
-        'Gagal reset data lokal: ' +
-        (tx.error && tx.error.message ? tx.error.message : 'Kesalahan database')
-      );
-
-    };
-
-  });
-
-}
-
 /* =====================================================
    MOBILE
 ===================================================== */
@@ -1210,36 +644,10 @@ function resetSyncedLocalData(){
   }
 
 }
-.hidden{display:none!important}
 </style>
 </head>
 
 <body>
-
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card">
-    <div class="login-logo">QR</div>
-    <div class="login-title">LOGIN GURU PIKET</div>
-    <div class="login-subtitle">
-      Masukkan nomor HP petugas untuk memulai scanner.<br>
-      Petugas yang login akan tercatat pada setiap scan.<br>Login pertama memerlukan internet; setelah itu dapat digunakan offline.
-    </div>
-    <label class="login-label" for="petugasPhone">Nomor HP</label>
-    <input id="petugasPhone" class="login-input" type="tel" inputmode="tel"
-           autocomplete="tel" placeholder="Contoh: 08xxxxxxxxxx"
-           onkeydown="if(event.key==='Enter') loginPetugas()">
-    <div id="loginError" class="login-error"></div>
-    <button id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
-            onclick="loginPetugas()">🔐 MASUK</button>
-
-    <button id="refreshPetugasButton" class="btn secondary"
-            style="width:100%;margin-top:8px"
-            onclick="manualRefreshPetugasMaster()">
-      ↻ AMBIL DATA GURU
-    </button>
-  </div>
-</div>
-
 
 <div class="app">
 
@@ -1284,9 +692,6 @@ function resetSyncedLocalData(){
 
 </header>
 
-<div id="petugasBar" class="petugas-bar">
-  Petugas: <b id="petugasNama">Belum login</b> • ID: <b id="petugasId">-</b>
-</div>
 
 <!-- ===================================================
      DATABASE SISWA
@@ -1348,6 +753,14 @@ function resetSyncedLocalData(){
       onclick="setMode('PAGI')"
     >
       PAGI
+    </button>
+
+    <button
+      class="mode-btn"
+      data-mode="APEL"
+      onclick="setMode('APEL')"
+    >
+      APEL
     </button>
 
     <button
@@ -1550,22 +963,11 @@ function resetSyncedLocalData(){
 </section>
 
 
-
-<section class="panel">
-  <div class="row">
-    <button class="btn secondary reset-btn" style="flex:1" onclick="resetSyncedLocalData()">♻ RESET TERSINKRON</button>
-    <button class="btn secondary danger-btn" style="flex:1" onclick="logoutPetugas()">⇥ KELUAR</button>
-  </div>
-  <div class="sync-info">
-    Reset hanya menghapus data SYNCED di perangkat ini. LOG_SCAN tidak dihapus dan data PENDING tetap aman.
-  </div>
-</section>
-
 <div class="footer">
 
   Scanner Offline • SMKN 1 Wakatobi<br>
 
-  Data scan tetap tersimpan walaupun internet mati • Petugas tercatat pada setiap scan.
+  Data scan tetap tersimpan walaupun internet mati.
 
 </div>
 
@@ -1585,19 +987,13 @@ const DB_NAME =
 'SMKN1_SCANNER_OFFLINE';
 
 const DB_VERSION =
-3;
+1;
 
 const STORE_SCAN =
 'SCAN';
 
 const STORE_STUDENT =
 'STUDENT';
-
-const STORE_PETUGAS =
-'PETUGAS';
-
-let currentPetugas =
-null;
 
 let db =
 null;
@@ -1636,16 +1032,6 @@ document.addEventListener(
 
       await initDatabase();
 
-      try{
-        await restorePetugasLogin();
-      }
-      catch(error){
-        console.warn(
-          'Restore login dilewati:',
-          error
-        );
-      }
-
       updateNetwork();
 
       await updateStats();
@@ -1659,18 +1045,13 @@ document.addEventListener(
       ){
 
         setTimeout(
-          refreshPetugasMaster,
-          500
-        );
-
-        setTimeout(
           refreshMaster,
-          1000
+          700
         );
 
         setTimeout(
           syncPending,
-          2200
+          1800
         );
 
       }
@@ -1735,13 +1116,11 @@ window.addEventListener(
       'Internet tersedia. Memulai sinkronisasi...'
     );
 
-    refreshPetugasMaster();
-
     refreshMaster();
 
     setTimeout(
       syncPending,
-      1200
+      1000
     );
 
   }
@@ -1874,23 +1253,6 @@ function initDatabase(){
 
           }
 
-          if(
-            !database.objectStoreNames
-              .contains(
-                STORE_PETUGAS
-              )
-          ){
-
-            database.createObjectStore(
-              STORE_PETUGAS,
-              {
-                keyPath:
-                  'id'
-              }
-            );
-
-          }
-
         };
 
 
@@ -1924,139 +1286,154 @@ function initDatabase(){
    API GET / JSONP
 ===================================================== */
 
-function apiGet(action, params){
+function apiGet(
+  action
+){
 
-  return new Promise(function(resolve,reject){
+  return new Promise(
+    function(resolve,reject){
 
-    const callbackName =
-      'jsonp_' +
-      Date.now() +
-      '_' +
-      Math.floor(
-        Math.random() * 100000
-      );
+      const callbackName =
+        '__scanner_' +
+        Date.now() +
+        '_' +
+        Math.random()
+          .toString(36)
+          .substring(2);
 
-    const script =
-      document.createElement('script');
 
-    let finished = false;
-
-    function cleanup(){
-
-      if(script.parentNode){
-        script.parentNode.removeChild(
-          script
-        );
-      }
-
-      try{
-        delete window[callbackName];
-      }
-      catch(e){
-        window[callbackName] =
-          undefined;
-      }
-
-    }
-
-    const timeout =
-      setTimeout(function(){
-
-        if(finished) return;
-
-        finished = true;
-        cleanup();
-
-        reject(
-          new Error(
-            'Server tidak merespons. Periksa URL Web App dan koneksi internet.'
-          )
+      const script =
+        document.createElement(
+          'script'
         );
 
-      },15000);
 
-    window[callbackName] =
-      function(data){
+      let finished =
+        false;
 
-        if(finished) return;
 
-        finished = true;
-        clearTimeout(timeout);
-        cleanup();
+      const timeout =
+        setTimeout(
+          function(){
 
-        resolve(data);
+            if(finished){
+              return;
+            }
 
-      };
+            finished =
+              true;
 
-    const query =
-      new URLSearchParams();
+            cleanup();
 
-    query.set(
-      'action',
-      String(action || '')
-    );
-
-    if(params){
-
-      Object.keys(params)
-        .forEach(function(key){
-
-          const value =
-            params[key];
-
-          if(
-            value !== undefined &&
-            value !== null
-          ){
-
-            query.set(
-              key,
-              String(value)
+            reject(
+              new Error(
+                'Backend tidak merespons.'
+              )
             );
 
-          }
-
-        });
-
-    }
-
-    query.set(
-      'callback',
-      callbackName
-    );
-
-    query.set(
-      't',
-      Date.now()
-    );
-
-    script.onerror =
-      function(){
-
-        if(finished) return;
-
-        finished = true;
-        clearTimeout(timeout);
-        cleanup();
-
-        reject(
-          new Error(
-            'Gagal menghubungi Scanner Offline API.'
-          )
+          },
+          20000
         );
 
-      };
 
-    script.src =
-      API_URL +
-      '?' +
-      query.toString();
+      function cleanup(){
 
-    document.head.appendChild(
-      script
-    );
+        clearTimeout(
+          timeout
+        );
 
-  });
+        if(
+          script.parentNode
+        ){
+
+          script.parentNode
+            .removeChild(
+              script
+            );
+
+        }
+
+        try{
+
+          delete window[
+            callbackName
+          ];
+
+        }
+        catch(error){
+
+          window[
+            callbackName
+          ] =
+            undefined;
+
+        }
+
+      }
+
+
+      window[
+        callbackName
+      ] =
+        function(data){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
+
+          cleanup();
+
+          resolve(
+            data
+          );
+
+        };
+
+
+      script.onerror =
+        function(){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
+
+          cleanup();
+
+          reject(
+            new Error(
+              'Gagal menghubungi server.'
+            )
+          );
+
+        };
+
+
+      script.src =
+        API_URL +
+        '?action=' +
+        encodeURIComponent(
+          action
+        ) +
+        '&callback=' +
+        encodeURIComponent(
+          callbackName
+        ) +
+        '&t=' +
+        Date.now();
+
+
+      document.head.appendChild(
+        script
+      );
+
+    }
+  );
 
 }
 
@@ -2238,141 +1615,6 @@ function apiSyncOne(
 /* =====================================================
    MASTER SISWA
 ===================================================== */
-
-
-async function refreshPetugasMaster(){
-
-  if(!navigator.onLine){
-    return;
-  }
-
-  try{
-
-    const response =
-      await apiGet(
-        'getMasterPetugas'
-      );
-
-    if(
-      !response ||
-      !response.ok
-    ){
-
-      console.warn(
-        'Master petugas:',
-        response
-      );
-
-      return;
-
-    }
-
-    const rows =
-      response.petugas ||
-      [];
-
-    await savePetugasMaster(
-      rows
-    );
-
-    /*
-     * Jika belum ada sesi login,
-     * setelah master petugas masuk lokal
-     * pengguna tetap diminta nomor HP.
-     */
-    if(!currentPetugas){
-
-      document.getElementById(
-        'loginError'
-      ).textContent =
-        rows.length
-          ? rows.length +
-            ' data guru/petugas siap. Masukkan nomor HP.'
-          : 'Data guru/petugas kosong.';
-
-    }
-
-    console.log(
-      'Master petugas tersimpan:',
-      rows.length
-    );
-
-  }
-  catch(error){
-
-    console.warn(
-      'Gagal mengambil master petugas:',
-      error
-    );
-
-  }
-
-}
-
-function savePetugasMaster(rows){
-
-  return new Promise(
-    function(resolve,reject){
-
-      const tx =
-        db.transaction(
-          STORE_PETUGAS,
-          'readwrite'
-        );
-
-      const store =
-        tx.objectStore(
-          STORE_PETUGAS
-        );
-
-      /*
-       * Hanya mengganti cache master petugas.
-       * Tidak menyentuh STORE_SCAN.
-       */
-      store.clear();
-
-      (rows || []).forEach(
-        function(row){
-
-          const petugas =
-            normalizePetugas(
-              row
-            );
-
-          if(
-            petugas.phone &&
-            (
-              petugas.id ||
-              petugas.nama
-            )
-          ){
-
-            store.put(
-              petugas
-            );
-
-          }
-
-        }
-      );
-
-      tx.oncomplete =
-        function(){
-          resolve();
-        };
-
-      tx.onerror =
-        function(){
-          reject(
-            tx.error
-          );
-        };
-
-    }
-  );
-
-}
-
 
 async function refreshMaster(){
 
@@ -2737,16 +1979,6 @@ function setMode(
 ===================================================== */
 
 async function startScanner(){
-
-  if(!currentPetugas){
-
-    document.getElementById('loginOverlay')
-      .classList.remove('hidden');
-
-    showError('Silakan login guru piket terlebih dahulu.');
-
-    return;
-  }
 
   if(
     scanning
@@ -3322,12 +2554,6 @@ function createTransaction(
 
     mode:
       currentMode,
-
-    idPetugas:
-      currentPetugas ? currentPetugas.id : '',
-
-    petugas:
-      currentPetugas ? currentPetugas.nama : '',
 
     qr:
       raw,
@@ -3991,12 +3217,6 @@ function showSuccess(
 
         escapeHTML(
           item.jurusan
-        ) +
-
-        '<br>Petugas: ' +
-
-        escapeHTML(
-          item.petugas || '-'
         ) +
 
       '</div>' +
