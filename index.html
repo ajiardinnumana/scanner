@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Scanner Offline • SMKN 1 Wakatobi</title>
+
+<style>
+:root{
+  --bg:#050912;
+  --panel:#0d1727;
+  --panel2:#142238;
+  --line:#ffffff18;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --blue:#2298ff;
+  --cyan:#31dcff;
+  --green:#22c55e;
+  --orange:#f59e0b;
+  --red:#ef4444;
+  --shadow:0 20px 50px #0009;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  min-height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 15% 0%,#16476f 0,#08111e 32%,#03060c 78%);
+}
+body{min-height:100vh}
+button{font:inherit}
+.app{width:min(560px,100%);margin:auto;padding:10px}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:linear-gradient(145deg,#ffffff18,#ffffff04);
+  backdrop-filter:blur(18px);
+  box-shadow:var(--shadow);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{
+  width:46px;height:46px;border-radius:14px;
+  display:grid;place-items:center;
+  font-weight:900;color:#101827;
+  background:linear-gradient(145deg,#fff,#cbd5e1 28%,#64748b 52%,#fff 70%,#64748b);
+  box-shadow:inset 0 1px #fff,0 8px 25px #0009;
+}
+.title{font-size:15px;font-weight:900}
+.subtitle{font-size:9px;color:var(--muted);margin-top:3px}
+
+.network{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 10px;border-radius:99px;
+  background:#0006;font-size:9px;font-weight:900;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
+.network.online .dot{background:var(--green);box-shadow:0 0 12px var(--green)}
+.network.offline .dot{background:var(--orange);box-shadow:0 0 12px var(--orange)}
+
+.panel{
+  margin-top:10px;padding:12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:linear-gradient(145deg,#ffffff0e,#ffffff03);
+  box-shadow:var(--shadow);
+}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.small-label{
+  font-size:9px;color:var(--muted);
+  font-weight:900;text-transform:uppercase;
+}
+.master-count{font-size:13px;font-weight:900;margin-top:3px}
+.master-info{font-size:9px;color:var(--muted);margin-top:5px}
+
+.btn{
+  border:0;border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;
+  font-size:9px;font-weight:900;
+}
+.primary{
+  color:#fff;
+  background:linear-gradient(145deg,#0ea5e9,#2563eb);
+  box-shadow:0 8px 20px #2563eb44,inset 0 1px #fff6;
+}
+.secondary{
+  color:#e2e8f0;
+  background:#ffffff09;
+  border:1px solid #ffffff18;
+}
+
+.mode-title{
+  font-size:9px;color:var(--muted);
+  font-weight:900;letter-spacing:1px;
+  margin-bottom:8px;
+}
+.mode-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mode-btn{
+  border:1px solid #ffffff15;
+  border-radius:12px;
+  padding:12px 5px;
+  color:#cbd5e1;
+  background:#ffffff07;
+  cursor:pointer;
+  font-size:10px;font-weight:900;
+}
+.mode-btn.active{
+  color:#fff;
+  background:linear-gradient(145deg,#1677d2,#087f9f);
+  border-color:#38d9ff88;
+  box-shadow:0 8px 20px #0ea5e944,inset 0 1px #fff6;
+}
+
+.scanner-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:9px;
+}
+.scanner-title{font-size:14px;font-weight:900}
+.camera-status{font-size:8px;color:var(--muted)}
+
+.camera{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  overflow:hidden;
+  border-radius:19px;
+  background:#020617;
+  border:1px solid #ffffff16;
+  box-shadow:inset 0 0 35px #000,0 12px 30px #0008;
+}
+video{width:100%;height:100%;display:block;object-fit:cover}
+.scan-frame{
+  position:absolute;left:13%;top:13%;width:74%;height:74%;
+  border:2px solid var(--cyan);
+  border-radius:20px;
+  box-shadow:0 0 20px #38d9ff77,0 0 0 999px #0004;
+  pointer-events:none;
+}
+.scan-line{
+  position:absolute;left:7%;right:7%;top:10%;height:2px;
+  background:linear-gradient(90deg,transparent,#fff,var(--cyan),transparent);
+  box-shadow:0 0 14px var(--cyan);
+  animation:line 2s linear infinite;
+}
+@keyframes line{
+  0%{transform:translateY(0);opacity:.2}
+  50%{opacity:1}
+  100%{transform:translateY(300px);opacity:.2}
+}
+.camera-message{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  text-align:center;padding:30px;
+  background:#020617cc;
+  color:#cbd5e1;font-size:12px;
+}
+.hidden{display:none!important}
+
+.result{
+  min-height:92px;
+  margin-top:10px;
+  padding:13px;
+  border-radius:16px;
+  background:#020617aa;
+  border:1px solid var(--line);
+}
+.result-name{font-size:18px;font-weight:900}
+.result-info{font-size:10px;color:var(--muted);line-height:1.6;margin-top:5px}
+.result-mode{
+  display:inline-block;margin-top:7px;
+  padding:4px 8px;border-radius:99px;
+  background:#38bdf822;color:#67e8f9;
+  font-size:9px;font-weight:900;
+}
+.success{color:#86efac}
+.error{color:#fca5a5}
+
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{
+  padding:11px 5px;text-align:center;border-radius:15px;
+  background:linear-gradient(145deg,#182438,#0c131f);
+  border:1px solid var(--line);
+}
+.stat-value{font-size:22px;font-weight:900}
+.stat-label{margin-top:3px;color:var(--muted);font-size:8px;font-weight:900}
+
+.sync-head{font-size:9px;font-weight:900}
+.sync-state{color:#86efac}
+.progress{
+  height:7px;margin-top:8px;overflow:hidden;
+  border-radius:99px;background:#020617;
+}
+.progress-bar{
+  width:0;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#0ea5e9,#22c55e);
+  transition:width .25s;
+}
+.sync-info{margin-top:6px;color:var(--muted);font-size:8px}
+
+.footer{text-align:center;padding:15px 5px 8px;color:#64748b;font-size:8px}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+  <div class="brand">
+    <div class="logo">QR</div>
+    <div>
+      <div class="title">SCANNER ABSENSI</div>
+      <div class="subtitle">SMKN 1 WAKATOBI</div>
+    </div>
+  </div>
+
+  <div id="network" class="network offline">
+    <span class="dot"></span>
+    <span id="networkText">OFFLINE</span>
+  </div>
+</header>
+
+<section class="panel">
+  <div class="row">
+    <div>
+      <div class="small-label">Database Siswa</div>
+      <div id="masterCount" class="master-count">Belum dimuat</div>
+    </div>
+    <button class="btn primary" onclick="refreshMaster()">↻ PERBARUI</button>
+  </div>
+  <div id="masterInfo" class="master-info">
+    Data siswa perlu diperbarui ketika online.
+  </div>
+</section>
+
+<section class="panel">
+  <div class="mode-title">MODE ABSENSI</div>
+
+  <div class="mode-buttons">
+    <button class="mode-btn active" data-mode="PAGI" onclick="setMode('PAGI')">PAGI</button>
+    <button class="mode-btn" data-mode="APEL" onclick="setMode('APEL')">APEL</button>
+    <button class="mode-btn" data-mode="SIANG" onclick="setMode('SIANG')">SIANG</button>
+  </div>
+</section>
+
+<section class="panel">
+
+  <div class="scanner-head">
+    <div class="scanner-title">Scanner QR</div>
+    <div id="cameraStatus" class="camera-status">Kamera belum aktif</div>
+  </div>
+
+  <div class="camera">
+
+    <video id="video" autoplay muted playsinline></video>
+
+    <div id="cameraMessage" class="camera-message">
+      Tekan <b>MULAI SCANNER</b><br>
+      untuk mengaktifkan kamera.
+    </div>
+
+    <div id="scanFrame" class="scan-frame hidden">
+      <div class="scan-line"></div>
+    </div>
+
+  </div>
+
+  <div id="result" class="result">
+    <div class="result-info">Belum ada scan.</div>
+  </div>
+
+  <div class="controls">
+    <button id="startButton" class="btn primary" onclick="startScanner()">
+      ▶ MULAI SCANNER
+    </button>
+    <button class="btn secondary" onclick="stopScanner()">
+      ■ STOP
+    </button>
+  </div>
+
+</section>
+
+<section class="stats">
+
+  <div class="stat">
+    <div id="todayCount" class="stat-value">0</div>
+    <div class="stat-label">Scan Hari Ini</div>
+  </div>
+
+  <div class="stat">
+    <div id="pendingCount" class="stat-value">0</div>
+    <div class="stat-label">Belum Terkirim</div>
+  </div>
+
+  <div class="stat">
+    <div id="syncedCount" class="stat-value">0</div>
+    <div class="stat-label">Tersinkron</div>
+  </div>
+
+</section>
+
+<section class="panel">
+
+  <div class="row sync-head">
+    <span>STATUS SINKRONISASI</span>
+    <span id="syncState" class="sync-state">SIAP</span>
+  </div>
+
+  <div class="progress">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+
+  <div id="syncInfo" class="sync-info">
+    Data scan disimpan lokal pada perangkat.
+  </div>
+
+</section>
+
+<div class="footer">
+  Scanner Offline • SMKN 1 Wakatobi<br>
+  Data akan dikirim otomatis ketika internet tersedia.
+</div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   KONFIGURASI BACKEND
+===================================================== */
+
+const API_URL =
+'https://script.google.com/macros/s/AKfycbwJwJVkdE-VH-c1ZASwV63GGQ1LC-0E3hNKZVf25SheEyzxthiA89q1fT09hG9h3RTY/exec';
+
+
+/*
+ * Nama database lokal.
+ */
+const DB_NAME =
+  'SMKN1_SCANNER_OFFLINE';
+
+const DB_VERSION = 1;
+
+const STORE_SCAN = 'SCAN';
+const STORE_STUDENT = 'STUDENT';
+
+let db = null;
+let currentMode = 'PAGI';
+let stream = null;
+let scanning = false;
+let animationId = null;
+let detector = null;
+let lastQR = '';
+let lastQRTime = 0;
+let syncRunning = false;
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+document.addEventListener(
+  'DOMContentLoaded',
+  async () => {
+
+    try{
+
+      await initDatabase();
+
+      updateNetwork();
+
+      await updateStats();
+
+      await updateMasterInfo();
+
+      /*
+       * Service worker.
+       */
+      if(
+        'serviceWorker' in navigator
+      ){
+
+        try{
+
+          await navigator.serviceWorker.register(
+            './sw.js'
+          );
+
+        }catch(e){
+
+          console.log(
+            'Service worker belum tersedia:',
+            e
+          );
+
+        }
+
+      }
+
+      if(navigator.onLine){
+
+        setTimeout(
+          refreshMaster,
+          700
+        );
+
+        setTimeout(
+          syncPending,
+          1500
+        );
+
+      }
+
+    }catch(err){
+
+      showError(
+        'Inisialisasi gagal: ' +
+        err.message
+      );
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   NETWORK
+===================================================== */
+
+window.addEventListener(
+  'online',
+  () => {
+
+    updateNetwork();
+
+    refreshMaster();
+
+    syncPending();
+
+  }
+);
+
+window.addEventListener(
+  'offline',
+  () => {
+
+    updateNetwork();
+
+  }
+);
+
+function updateNetwork(){
+
+  const el =
+    document.getElementById(
+      'network'
+    );
+
+  const text =
+    document.getElementById(
+      'networkText'
+    );
+
+  if(navigator.onLine){
+
+    el.className =
+      'network online';
+
+    text.textContent =
+      'ONLINE';
+
+  }else{
+
+    el.className =
+      'network offline';
+
+    text.textContent =
+      'OFFLINE';
+
+  }
+
+}
+
+
+/* =====================================================
+   INDEXEDDB
+===================================================== */
+
+function initDatabase(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const request =
+        indexedDB.open(
+          DB_NAME,
+          DB_VERSION
+        );
+
+      request.onupgradeneeded =
+        event => {
+
+          const database =
+            event.target.result;
+
+          if(
+            !database.objectStoreNames
+              .contains(STORE_SCAN)
+          ){
+
+            const store =
+              database.createObjectStore(
+                STORE_SCAN,
+                {
+                  keyPath:
+                    'transactionId'
+                }
+              );
+
+            store.createIndex(
+              'status',
+              'status',
+              {unique:false}
+            );
+
+            store.createIndex(
+              'tanggal',
+              'tanggal',
+              {unique:false}
+            );
+
+          }
+
+          if(
+            !database.objectStoreNames
+              .contains(STORE_STUDENT)
+          ){
+
+            const store =
+              database.createObjectStore(
+                STORE_STUDENT,
+                {
+                  keyPath:
+                    'idSiswa'
+                }
+              );
+
+          }
+
+        };
+
+      request.onsuccess =
+        event => {
+
+          db =
+            event.target.result;
+
+          resolve();
+
+        };
+
+      request.onerror =
+        () => reject(
+          request.error
+        );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   API
+===================================================== */
+
+/*
+ * Apps Script Web App API memakai JSONP.
+ *
+ * Alasannya:
+ * GitHub Pages berbeda origin dengan Apps Script.
+ *
+ * JSONP memungkinkan browser mengambil data
+ * tanpa terkena CORS pada endpoint doGet().
+ */
+
+function apiGet(action){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const callback =
+        '__scannerCallback_' +
+        Date.now() +
+        '_' +
+        Math.random()
+          .toString(36)
+          .slice(2);
+
+      const script =
+        document.createElement(
+          'script'
+        );
+
+      const timeout =
+        setTimeout(
+          () => {
+
+            cleanup();
+
+            reject(
+              new Error(
+                'Backend tidak merespons.'
+              )
+            );
+
+          },
+          20000
+        );
+
+      function cleanup(){
+
+        clearTimeout(
+          timeout
+        );
+
+        if(
+          script.parentNode
+        ){
+
+          script.parentNode
+            .removeChild(
+              script
+            );
+
+        }
+
+        try{
+
+          delete window[callback];
+
+        }catch(e){
+
+          window[callback] =
+            undefined;
+
+        }
+
+      }
+
+      window[callback] =
+        data => {
+
+          cleanup();
+
+          resolve(data);
+
+        };
+
+      script.onerror =
+        () => {
+
+          cleanup();
+
+          reject(
+            new Error(
+              'Gagal menghubungi backend.'
+            )
+          );
+
+        };
+
+      script.src =
+        API_URL +
+        '?action=' +
+        encodeURIComponent(action) +
+        '&callback=' +
+        encodeURIComponent(callback) +
+        '&t=' +
+        Date.now();
+
+      document.head.appendChild(
+        script
+      );
+
+    }
+  );
+
+}
+
+
+/*
+ * POST sinkronisasi.
+ *
+ * Untuk keamanan browser dan Apps Script,
+ * kita kirim melalui form request.
+ */
+function apiSync(batch){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const callback =
+        '__syncCallback_' +
+        Date.now() +
+        '_' +
+        Math.random()
+          .toString(36)
+          .slice(2);
+
+      const form =
+        document.createElement(
+          'form'
+        );
+
+      form.method =
+        'POST';
+
+      form.action =
+        API_URL;
+
+      form.target =
+        'scanner_sync_frame';
+
+      form.style.display =
+        'none';
+
+      const payload =
+        document.createElement(
+          'input'
+        );
+
+      payload.name =
+        'payload';
+
+      payload.value =
+        JSON.stringify({
+          action:
+            'syncOfflineBatch',
+          transactions:
+            batch,
+          callback:
+            callback
+        });
+
+      form.appendChild(
+        payload
+      );
+
+      document.body.appendChild(
+        form
+      );
+
+
+      /*
+       * Karena Apps Script Web App dapat
+       * merespons redirect, gunakan iframe.
+       */
+      let frame =
+        document.getElementById(
+          'scanner_sync_frame'
+        );
+
+      if(!frame){
+
+        frame =
+          document.createElement(
+            'iframe'
+          );
+
+        frame.id =
+          'scanner_sync_frame';
+
+        frame.name =
+          'scanner_sync_frame';
+
+        frame.style.display =
+          'none';
+
+        document.body.appendChild(
+          frame
+        );
+
+      }
+
+
+      /*
+       * Untuk tahap awal kita menggunakan
+       * GET endpoint khusus sinkronisasi.
+       *
+       * Payload dikirim sebagai base64.
+       */
+      form.remove();
+
+
+      /*
+       * Gunakan endpoint GET agar kompatibel
+       * dengan Apps Script.
+       */
+      apiSyncGet(
+        batch
+      )
+      .then(resolve)
+      .catch(reject);
+
+    }
+  );
+
+}
+
+
+function apiSyncGet(batch){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const callback =
+        '__batchCallback_' +
+        Date.now() +
+        '_' +
+        Math.random()
+          .toString(36)
+          .slice(2);
+
+      const script =
+        document.createElement(
+          'script'
+        );
+
+      const timeout =
+        setTimeout(
+          () => {
+
+            cleanup();
+
+            reject(
+              new Error(
+                'Sinkronisasi timeout.'
+              )
+            );
+
+          },
+          30000
+        );
+
+      function cleanup(){
+
+        clearTimeout(timeout);
+
+        if(script.parentNode){
+
+          script.parentNode
+            .removeChild(
+              script
+            );
+
+        }
+
+        try{
+
+          delete window[callback];
+
+        }catch(e){
+
+          window[callback] =
+            undefined;
+
+        }
+
+      }
+
+      window[callback] =
+        data => {
+
+          cleanup();
+
+          resolve(data);
+
+        };
+
+
+      /*
+       * Data JSON dikirim encoded.
+       */
+      const encoded =
+        encodeURIComponent(
+          JSON.stringify(batch)
+        );
+
+      script.onerror =
+        () => {
+
+          cleanup();
+
+          reject(
+            new Error(
+              'Gagal mengirim batch.'
+            )
+          );
+
+        };
+
+
+      script.src =
+        API_URL +
+        '?action=syncOfflineBatch' +
+        '&data=' +
+        encoded +
+        '&callback=' +
+        encodeURIComponent(callback) +
+        '&t=' +
+        Date.now();
+
+
+      document.head.appendChild(
+        script
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   MASTER
+===================================================== */
+
+async function refreshMaster(){
+
+  if(!navigator.onLine){
+
+    showInfo(
+      'Offline. Database siswa lokal tetap digunakan.'
+    );
+
+    return;
+
+  }
+
+  setMasterStatus(
+    'Mengambil data...'
+  );
+
+  try{
+
+    const data =
+      await apiGet(
+        'getMasterSiswa'
+      );
+
+    if(
+      !data ||
+      !data.ok
+    ){
+
+      throw new Error(
+        'Data master tidak valid.'
+      );
+
+    }
+
+    await saveStudents(
+      data.students || []
+    );
+
+    await updateMasterInfo();
+
+    showInfo(
+      'Database siswa diperbarui: ' +
+      (data.students || []).length +
+      ' siswa aktif.'
+    );
+
+  }catch(err){
+
+    setMasterStatus(
+      'Gagal diperbarui'
+    );
+
+    showError(
+      err.message
+    );
+
+  }
+
+}
+
+
+function saveStudents(students){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_STUDENT,
+          'readwrite'
+        );
+
+      const store =
+        transaction.objectStore(
+          STORE_STUDENT
+        );
+
+      store.clear();
+
+      students.forEach(
+        student => {
+
+          if(
+            student &&
+            student.idSiswa
+          ){
+
+            store.put(
+              student
+            );
+
+          }
+
+        }
+      );
+
+      transaction.oncomplete =
+        resolve;
+
+      transaction.onerror =
+        () => reject(
+          transaction.error
+        );
+
+    }
+  );
+
+}
+
+
+function getStudent(id){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_STUDENT,
+          'readonly'
+        );
+
+      const request =
+        transaction
+          .objectStore(
+            STORE_STUDENT
+          )
+          .get(
+            String(id).trim()
+          );
+
+      request.onsuccess =
+        () => resolve(
+          request.result || null
+        );
+
+      request.onerror =
+        () => reject(
+          request.error
+        );
+
+    }
+  );
+
+}
+
+
+async function updateMasterInfo(){
+
+  const students =
+    await getAllStudents();
+
+  document.getElementById(
+    'masterCount'
+  ).textContent =
+    students.length
+      ? students.length + ' siswa aktif'
+      : 'Belum tersedia';
+
+  document.getElementById(
+    'masterInfo'
+  ).textContent =
+    students.length
+      ? 'Database lokal siap digunakan offline.'
+      : 'Tekan PERBARUI ketika online.';
+
+}
+
+
+function getAllStudents(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_STUDENT,
+          'readonly'
+        );
+
+      const request =
+        transaction
+          .objectStore(
+            STORE_STUDENT
+          )
+          .getAll();
+
+      request.onsuccess =
+        () => resolve(
+          request.result || []
+        );
+
+      request.onerror =
+        () => reject(
+          request.error
+        );
+
+    }
+  );
+
+}
+
+
+function setMasterStatus(text){
+
+  document.getElementById(
+    'masterCount'
+  ).textContent =
+    text;
+
+}
+
+
+/* =====================================================
+   MODE
+===================================================== */
+
+function setMode(mode){
+
+  currentMode =
+    mode;
+
+  document
+    .querySelectorAll(
+      '.mode-btn'
+    )
+    .forEach(
+      button => {
+
+        button.classList.toggle(
+          'active',
+          button.dataset.mode === mode
+        );
+
+      }
+    );
+
+  showInfo(
+    'Mode aktif: ' +
+    mode
+  );
+
+}
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+async function startScanner(){
+
+  if(scanning){
+    return;
+  }
+
+  if(
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ){
+
+    showError(
+      'Browser tidak mendukung kamera.'
+    );
+
+    return;
+
+  }
+
+  try{
+
+    stream =
+      await navigator.mediaDevices
+        .getUserMedia({
+          audio:false,
+          video:{
+            facingMode:{
+              ideal:'environment'
+            },
+            width:{
+              ideal:1280
+            },
+            height:{
+              ideal:720
+            }
+          }
+        });
+
+    video.srcObject =
+      stream;
+
+    await video.play();
+
+    scanning =
+      true;
+
+    cameraMessage
+      .classList.add(
+        'hidden'
+      );
+
+    scanFrame
+      .classList.remove(
+        'hidden'
+      );
+
+    document.getElementById(
+      'cameraStatus'
+    ).textContent =
+      'Kamera aktif';
+
+    document.getElementById(
+      'startButton'
+    ).textContent =
+      '● SCANNER AKTIF';
+
+
+    if(
+      'BarcodeDetector' in window
+    ){
+
+      detector =
+        new BarcodeDetector({
+          formats:[
+            'qr_code'
+          ]
+        });
+
+      scanLoop();
+
+    }else{
+
+      /*
+       * Fallback ke QR library melalui
+       * canvas decoding belum diaktifkan.
+       */
+      showError(
+        'Browser belum mendukung QR Scanner. Gunakan Chrome Android terbaru.'
+      );
+
+    }
+
+  }catch(err){
+
+    showError(
+      'Kamera gagal dibuka: ' +
+      (
+        err.message ||
+        err.name ||
+        err
+      )
+    );
+
+  }
+
+}
+
+
+function stopScanner(){
+
+  scanning =
+    false;
+
+  if(animationId){
+
+    cancelAnimationFrame(
+      animationId
+    );
+
+    animationId =
+      null;
+
+  }
+
+  if(stream){
+
+    stream
+      .getTracks()
+      .forEach(
+        track => track.stop()
+      );
+
+    stream =
+      null;
+
+  }
+
+  video.srcObject =
+    null;
+
+  cameraMessage
+    .classList.remove(
+      'hidden'
+    );
+
+  scanFrame
+    .classList.add(
+      'hidden'
+    );
+
+  document.getElementById(
+    'cameraStatus'
+  ).textContent =
+    'Kamera belum aktif';
+
+  document.getElementById(
+    'startButton'
+  ).textContent =
+    '▶ MULAI SCANNER';
+
+}
+
+
+function scanLoop(){
+
+  if(!scanning){
+    return;
+  }
+
+  detector
+    .detect(video)
+    .then(
+      codes => {
+
+        if(
+          codes &&
+          codes.length
+        ){
+
+          const raw =
+            codes[0].rawValue ||
+            '';
+
+          if(raw){
+
+            handleQR(
+              raw
+            );
+
+          }
+
+        }
+
+      }
+    )
+    .catch(
+      () => {}
+    );
+
+  animationId =
+    requestAnimationFrame(
+      scanLoop
+    );
+
+}
+
+
+/* =====================================================
+   QR
+===================================================== */
+
+async function handleQR(raw){
+
+  const value =
+    String(raw)
+      .trim();
+
+  if(!value){
+    return;
+  }
+
+  const now =
+    Date.now();
+
+  if(
+    value === lastQR &&
+    now - lastQRTime < 2500
+  ){
+
+    return;
+
+  }
+
+  lastQR =
+    value;
+
+  lastQRTime =
+    now;
+
+  const idSiswa =
+    extractIdSiswa(
+      value
+    );
+
+  if(!idSiswa){
+
+    showError(
+      'QR tidak berisi ID_SISWA.'
+    );
+
+    return;
+
+  }
+
+  const student =
+    await getStudent(
+      idSiswa
+    );
+
+  if(!student){
+
+    showError(
+      'ID_SISWA ' +
+      idSiswa +
+      ' belum tersedia di database lokal.'
+    );
+
+    beepError();
+
+    return;
+
+  }
+
+  const item =
+    createTransaction(
+      student,
+      value
+    );
+
+  try{
+
+    await saveScan(
+      item
+    );
+
+    showSuccess(
+      item
+    );
+
+    beep();
+
+    vibrate();
+
+    await updateStats();
+
+    if(navigator.onLine){
+
+      syncPending();
+
+    }
+
+  }catch(err){
+
+    showError(
+      err.message
+    );
+
+  }
+
+}
+
+
+function extractIdSiswa(value){
+
+  /*
+   * QR normal:
+   * S001
+   */
+  if(
+    /^[A-Za-z0-9_-]+$/.test(
+      value
+    )
+  ){
+
+    return value;
+
+  }
+
+  /*
+   * JSON:
+   */
+  try{
+
+    const obj =
+      JSON.parse(value);
+
+    return String(
+      obj.ID_SISWA ||
+      obj.idSiswa ||
+      obj.id ||
+      ''
+    ).trim();
+
+  }catch(e){
+
+    return '';
+
+  }
+
+}
+
+
+/* =====================================================
+   TRANSAKSI
+===================================================== */
+
+function createTransaction(
+  student,
+  raw
+){
+
+  const now =
+    new Date();
+
+  return {
+
+    transactionId:
+      generateId(),
+
+    idSiswa:
+      student.idSiswa,
+
+    nis:
+      student.nis,
+
+    nama:
+      student.nama,
+
+    tingkat:
+      student.tingkat,
+
+    jurusan:
+      student.jurusan,
+
+    tanggal:
+      formatDate(now),
+
+    jam:
+      formatTime(now),
+
+    mode:
+      currentMode,
+
+    qr:
+      raw,
+
+    status:
+      'PENDING',
+
+    createdAt:
+      Date.now()
+
+  };
+
+}
+
+
+function generateId(){
+
+  return (
+    Date.now().toString(36) +
+    '-' +
+    Math.random()
+      .toString(36)
+      .slice(2) +
+    '-' +
+    currentMode
+  );
+
+}
+
+
+function saveScan(item){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_SCAN,
+          'readwrite'
+        );
+
+      transaction
+        .objectStore(
+          STORE_SCAN
+        )
+        .put(item);
+
+      transaction.oncomplete =
+        resolve;
+
+      transaction.onerror =
+        () => reject(
+          transaction.error
+        );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   SYNC
+===================================================== */
+
+async function syncPending(){
+
+  if(
+    !navigator.onLine ||
+    syncRunning
+  ){
+
+    return;
+
+  }
+
+  syncRunning =
+    true;
+
+  try{
+
+    const pending =
+      await getPending();
+
+    if(!pending.length){
+
+      document.getElementById(
+        'syncState'
+      ).textContent =
+        'SELESAI';
+
+      document.getElementById(
+        'syncInfo'
+      ).textContent =
+        'Tidak ada data yang menunggu.';
+
+      document.getElementById(
+        'progressBar'
+      ).style.width =
+        '100%';
+
+      return;
+
+    }
+
+    document.getElementById(
+      'syncState'
+    ).textContent =
+      'SINKRON';
+
+    for(
+      let i=0;
+      i<pending.length;
+      i+=20
+    ){
+
+      const batch =
+        pending.slice(
+          i,
+          i+20
+        );
+
+      const response =
+        await apiSync(
+          batch
+        );
+
+      if(
+        !response ||
+        !response.ok
+      ){
+
+        throw new Error(
+          'Server tidak menerima batch.'
+        );
+
+      }
+
+      const results =
+        response.results || [];
+
+      for(
+        const result of results
+      ){
+
+        if(
+          result.status ===
+            'SYNCED' ||
+
+          result.status ===
+            'DUPLICATE'
+        ){
+
+          await markSynced(
+            result.transactionId
+          );
+
+        }
+
+      }
+
+      const done =
+        Math.min(
+          i + batch.length,
+          pending.length
+        );
+
+      const percent =
+        Math.round(
+          done /
+          pending.length *
+          100
+        );
+
+      document.getElementById(
+        'progressBar'
+      ).style.width =
+        percent + '%';
+
+      document.getElementById(
+        'syncInfo'
+      ).textContent =
+        done +
+        ' / ' +
+        pending.length +
+        ' data diproses.';
+
+    }
+
+    document.getElementById(
+      'syncState'
+    ).textContent =
+      'SELESAI';
+
+    document.getElementById(
+      'syncInfo'
+    ).textContent =
+      'Semua data berhasil diproses.';
+
+    await updateStats();
+
+  }catch(err){
+
+    document.getElementById(
+      'syncState'
+    ).textContent =
+      'TERTAHAN';
+
+    document.getElementById(
+      'syncInfo'
+    ).textContent =
+      'Data tetap aman di perangkat. ' +
+      err.message;
+
+  }finally{
+
+    syncRunning =
+      false;
+
+  }
+
+}
+
+
+function getPending(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_SCAN,
+          'readonly'
+        );
+
+      const request =
+        transaction
+          .objectStore(
+            STORE_SCAN
+          )
+          .index(
+            'status'
+          )
+          .getAll(
+            'PENDING'
+          );
+
+      request.onsuccess =
+        () => resolve(
+          request.result || []
+        );
+
+      request.onerror =
+        () => reject(
+          request.error
+        );
+
+    }
+  );
+
+}
+
+
+function markSynced(id){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_SCAN,
+          'readwrite'
+        );
+
+      const store =
+        transaction.objectStore(
+          STORE_SCAN
+        );
+
+      const request =
+        store.get(id);
+
+      request.onsuccess =
+        () => {
+
+          const item =
+            request.result;
+
+          if(item){
+
+            item.status =
+              'SYNCED';
+
+            item.syncedAt =
+              Date.now();
+
+            store.put(
+              item
+            );
+
+          }
+
+        };
+
+      transaction.oncomplete =
+        resolve;
+
+      transaction.onerror =
+        () => reject(
+          transaction.error
+        );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   STAT
+===================================================== */
+
+async function updateStats(){
+
+  const all =
+    await getAllScans();
+
+  const today =
+    formatDate(
+      new Date()
+    );
+
+  let todayCount = 0;
+  let pending = 0;
+  let synced = 0;
+
+  all.forEach(
+    item => {
+
+      if(
+        item.tanggal ===
+        today
+      ){
+
+        todayCount++;
+
+      }
+
+      if(
+        item.status ===
+        'PENDING'
+      ){
+
+        pending++;
+
+      }
+
+      if(
+        item.status ===
+        'SYNCED'
+      ){
+
+        synced++;
+
+      }
+
+    }
+  );
+
+  document.getElementById(
+    'todayCount'
+  ).textContent =
+    todayCount;
+
+  document.getElementById(
+    'pendingCount'
+  ).textContent =
+    pending;
+
+  document.getElementById(
+    'syncedCount'
+  ).textContent =
+    synced;
+
+}
+
+
+function getAllScans(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const transaction =
+        db.transaction(
+          STORE_SCAN,
+          'readonly'
+        );
+
+      const request =
+        transaction
+          .objectStore(
+            STORE_SCAN
+          )
+          .getAll();
+
+      request.onsuccess =
+        () => resolve(
+          request.result || []
+        );
+
+      request.onerror =
+        () => reject(
+          request.error
+        );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function showSuccess(item){
+
+  document.getElementById(
+    'result'
+  ).innerHTML =
+
+    '<div class="success">' +
+
+      '<div class="result-name">' +
+        '✓ ' +
+        escapeHTML(item.nama) +
+      '</div>' +
+
+      '<div class="result-info">' +
+        'ID: ' +
+        escapeHTML(item.idSiswa) +
+        '<br>NIS: ' +
+        escapeHTML(item.nis) +
+        '<br>Tingkat: ' +
+        escapeHTML(item.tingkat) +
+        '<br>Jurusan: ' +
+        escapeHTML(item.jurusan) +
+      '</div>' +
+
+      '<span class="result-mode">' +
+        escapeHTML(item.mode) +
+        ' • ' +
+        escapeHTML(item.jam) +
+      '</span>' +
+
+    '</div>';
+
+}
+
+
+function showInfo(message){
+
+  document.getElementById(
+    'result'
+  ).innerHTML =
+
+    '<div class="result-info">' +
+      escapeHTML(message) +
+    '</div>';
+
+}
+
+
+function showError(message){
+
+  document.getElementById(
+    'result'
+  ).innerHTML =
+
+    '<div class="error">' +
+      '⚠ ' +
+      escapeHTML(message) +
+    '</div>';
+
+}
+
+
+function beep(){
+
+  try{
+
+    const AC =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(!AC)return;
+
+    const ctx =
+      new AC();
+
+    const oscillator =
+      ctx.createOscillator();
+
+    const gain =
+      ctx.createGain();
+
+    oscillator.frequency.value =
+      880;
+
+    gain.gain.value =
+      .08;
+
+    oscillator.connect(
+      gain
+    );
+
+    gain.connect(
+      ctx.destination
+    );
+
+    oscillator.start();
+
+    oscillator.stop(
+      ctx.currentTime + .12
+    );
+
+  }catch(e){}
+
+}
+
+
+function beepError(){
+
+  try{
+
+    const AC =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(!AC)return;
+
+    const ctx =
+      new AC();
+
+    const oscillator =
+      ctx.createOscillator();
+
+    oscillator.frequency.value =
+      220;
+
+    oscillator.connect(
+      ctx.destination
+    );
+
+    oscillator.start();
+
+    oscillator.stop(
+      ctx.currentTime + .18
+    );
+
+  }catch(e){}
+
+}
+
+
+function vibrate(){
+
+  if(
+    navigator.vibrate
+  ){
+
+    navigator.vibrate(
+      60
+    );
+
+  }
+
+}
+
+
+function formatDate(date){
+
+  return (
+    date.getFullYear() +
+    '-' +
+    String(
+      date.getMonth()+1
+    ).padStart(2,'0') +
+    '-' +
+    String(
+      date.getDate()
+    ).padStart(2,'0')
+  );
+
+}
+
+
+function formatTime(date){
+
+  return (
+    String(
+      date.getHours()
+    ).padStart(2,'0') +
+    ':' +
+    String(
+      date.getMinutes()
+    ).padStart(2,'0') +
+    ':' +
+    String(
+      date.getSeconds()
+    ).padStart(2,'0')
+  );
+
+}
+
+
+function escapeHTML(value){
+
+  return String(
+    value == null
+      ? ''
+      : value
+  ).replace(
+    /[&<>"']/g,
+    char => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#039;'
+    }[char])
+  );
+
+}
+
+</script>
+
+</body>
+</html>
