@@ -641,6 +641,117 @@ canvas{
 /* =====================================================
    LOGIN GURU PIKET
 ===================================================== */
+
+async function manualRefreshPetugasMaster(){
+
+  const button =
+    document.getElementById(
+      'refreshPetugasButton'
+    );
+
+  const errorBox =
+    document.getElementById(
+      'loginError'
+    );
+
+  if(!navigator.onLine){
+
+    errorBox.textContent =
+      'Internet tidak tersedia. Hubungkan internet untuk mengambil data guru.';
+
+    return;
+
+  }
+
+  if(button){
+    button.disabled = true;
+    button.textContent = '⏳ MENGAMBIL...';
+  }
+
+  try{
+
+    await refreshPetugasMaster();
+
+    const rows =
+      await getAllPetugasLocal();
+
+    if(errorBox){
+
+      errorBox.textContent =
+        rows.length
+          ? rows.length +
+            ' data guru tersedia di perangkat. Silakan masukkan nomor HP.'
+          : 'Data guru belum ditemukan di server.';
+
+    }
+
+  }
+  catch(error){
+
+    if(errorBox){
+
+      errorBox.textContent =
+        error &&
+        error.message
+          ? error.message
+          : String(error);
+
+    }
+
+  }
+  finally{
+
+    if(button){
+
+      button.disabled = false;
+      button.textContent =
+        '↻ AMBIL DATA GURU';
+
+    }
+
+  }
+
+}
+
+function getAllPetugasLocal(){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const tx =
+        db.transaction(
+          STORE_PETUGAS,
+          'readonly'
+        );
+
+      const request =
+        tx.objectStore(
+          STORE_PETUGAS
+        ).getAll();
+
+      request.onsuccess =
+        function(){
+
+          resolve(
+            request.result || []
+          );
+
+        };
+
+      request.onerror =
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
 async function loginPetugas(){
 
   const input = document.getElementById('petugasPhone');
@@ -655,6 +766,7 @@ async function loginPetugas(){
   const phone = normalizePhone(input.value);
 
   errorBox.textContent = '';
+  window.__lastPetugasLoginError = '';
 
   if(!phone){
     errorBox.textContent = 'Nomor HP wajib diisi.';
@@ -729,6 +841,24 @@ async function loginPetugas(){
 
       }
 
+      /*
+       * Jika server merespons tetapi login ditolak,
+       * simpan pesan server untuk ditampilkan jika
+       * cache lokal juga tidak menemukan nomor HP.
+       */
+      if(
+        response &&
+        response.ok === false &&
+        response.error
+      ){
+
+        window.__lastPetugasLoginError =
+          String(
+            response.error
+          );
+
+      }
+
     }
 
     /*
@@ -758,7 +888,10 @@ async function loginPetugas(){
 
     throw new Error(
       navigator.onLine
-        ? 'Nomor HP tidak terdaftar sebagai guru piket.'
+        ? (
+            window.__lastPetugasLoginError ||
+            'Nomor HP tidak terdaftar sebagai guru piket.'
+          )
         : 'Nomor HP belum pernah diverifikasi saat online.'
     );
 
@@ -1051,7 +1184,7 @@ function resetSyncedLocalData(){
     <div class="login-title">LOGIN GURU PIKET</div>
     <div class="login-subtitle">
       Masukkan nomor HP petugas untuk memulai scanner.<br>
-      
+      Petugas yang login akan tercatat pada setiap scan.<br>Login pertama memerlukan internet; setelah itu dapat digunakan offline.
     </div>
     <label class="login-label" for="petugasPhone">Nomor HP</label>
     <input id="petugasPhone" class="login-input" type="tel" inputmode="tel"
@@ -1060,6 +1193,12 @@ function resetSyncedLocalData(){
     <div id="loginError" class="login-error"></div>
     <button id="loginButton" class="btn primary" style="width:100%;margin-top:5px"
             onclick="loginPetugas()">🔐 MASUK</button>
+
+    <button id="refreshPetugasButton" class="btn secondary"
+            style="width:100%;margin-top:8px"
+            onclick="manualRefreshPetugasMaster()">
+      ↻ AMBIL DATA GURU
+    </button>
   </div>
 </div>
 
