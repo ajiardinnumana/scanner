@@ -1474,13 +1474,18 @@ document.addEventListener(
       ){
 
         setTimeout(
+          refreshPetugasMaster,
+          500
+        );
+
+        setTimeout(
           refreshMaster,
-          700
+          1000
         );
 
         setTimeout(
           syncPending,
-          1800
+          2200
         );
 
       }
@@ -1545,11 +1550,13 @@ window.addEventListener(
       'Internet tersedia. Memulai sinkronisasi...'
     );
 
+    refreshPetugasMaster();
+
     refreshMaster();
 
     setTimeout(
       syncPending,
-      1000
+      1200
     );
 
   }
@@ -2046,6 +2053,141 @@ function apiSyncOne(
 /* =====================================================
    MASTER SISWA
 ===================================================== */
+
+
+async function refreshPetugasMaster(){
+
+  if(!navigator.onLine){
+    return;
+  }
+
+  try{
+
+    const response =
+      await apiGet(
+        'getMasterPetugas'
+      );
+
+    if(
+      !response ||
+      !response.ok
+    ){
+
+      console.warn(
+        'Master petugas:',
+        response
+      );
+
+      return;
+
+    }
+
+    const rows =
+      response.petugas ||
+      [];
+
+    await savePetugasMaster(
+      rows
+    );
+
+    /*
+     * Jika belum ada sesi login,
+     * setelah master petugas masuk lokal
+     * pengguna tetap diminta nomor HP.
+     */
+    if(!currentPetugas){
+
+      document.getElementById(
+        'loginError'
+      ).textContent =
+        rows.length
+          ? rows.length +
+            ' data guru/petugas siap. Masukkan nomor HP.'
+          : 'Data guru/petugas kosong.';
+
+    }
+
+    console.log(
+      'Master petugas tersimpan:',
+      rows.length
+    );
+
+  }
+  catch(error){
+
+    console.warn(
+      'Gagal mengambil master petugas:',
+      error
+    );
+
+  }
+
+}
+
+function savePetugasMaster(rows){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const tx =
+        db.transaction(
+          STORE_PETUGAS,
+          'readwrite'
+        );
+
+      const store =
+        tx.objectStore(
+          STORE_PETUGAS
+        );
+
+      /*
+       * Hanya mengganti cache master petugas.
+       * Tidak menyentuh STORE_SCAN.
+       */
+      store.clear();
+
+      (rows || []).forEach(
+        function(row){
+
+          const petugas =
+            normalizePetugas(
+              row
+            );
+
+          if(
+            petugas.phone &&
+            (
+              petugas.id ||
+              petugas.nama
+            )
+          ){
+
+            store.put(
+              petugas
+            );
+
+          }
+
+        }
+      );
+
+      tx.oncomplete =
+        function(){
+          resolve();
+        };
+
+      tx.onerror =
+        function(){
+          reject(
+            tx.error
+          );
+        };
+
+    }
+  );
+
+}
+
 
 async function refreshMaster(){
 
