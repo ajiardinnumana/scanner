@@ -646,12 +646,19 @@ async function loginPetugas(){
   const input = document.getElementById('petugasPhone');
   const button = document.getElementById('loginButton');
   const errorBox = document.getElementById('loginError');
+
+  if(!input || !button || !errorBox){
+    console.error('Elemen login tidak ditemukan.');
+    return;
+  }
+
   const phone = normalizePhone(input.value);
 
   errorBox.textContent = '';
 
   if(!phone){
     errorBox.textContent = 'Nomor HP wajib diisi.';
+    input.focus();
     return;
   }
 
@@ -660,56 +667,112 @@ async function loginPetugas(){
 
   try{
 
-    let petugas = null;
-
+    /*
+     * Login online:
+     * Code.gs mengembalikan:
+     * {ok:true, petugas:{...}}
+     */
     if(navigator.onLine){
 
-      const response = await apiGet(
-        PETUGAS_LOGIN_ACTION +
-        '&phone=' +
-        encodeURIComponent(phone)
-      );
+      let response;
 
-      if(response && response.ok && response.petugas){
-        petugas = normalizePetugas(response.petugas);
-        await savePetugas(petugas);
+      try{
+
+        response = await apiGet(
+          'loginPetugas',
+          {
+            phone: phone
+          }
+        );
+
+      }
+      catch(apiError){
+
+        console.error('API login:',apiError);
+
+        /*
+         * Tetap coba login dari cache lokal.
+         */
+        response = null;
+
+      }
+
+      if(
+        response &&
+        response.ok &&
+        response.petugas
+      ){
+
+        const petugas =
+          normalizePetugas(
+            response.petugas
+          );
+
+        if(!petugas.phone){
+          petugas.phone = phone;
+        }
+
+        await savePetugas(
+          petugas
+        );
+
+        setCurrentPetugas(
+          petugas
+        );
+
+        showInfo(
+          'Login berhasil. Petugas: ' +
+          (petugas.nama || phone)
+        );
+
+        return;
+
       }
 
     }
 
-    if(!petugas){
-      petugas = await getPetugasByPhone(phone);
-    }
-
-    if(!petugas){
-      throw new Error(
-        navigator.onLine
-          ? 'Nomor HP tidak terdaftar sebagai guru piket.'
-          : 'Login pertama harus dilakukan saat online. Setelah berhasil, login dapat digunakan offline.'
+    /*
+     * Jika offline / API gagal:
+     * cari petugas yang sebelumnya sudah login
+     * pada perangkat ini.
+     */
+    const cached =
+      await getPetugasByPhone(
+        phone
       );
+
+    if(cached){
+
+      setCurrentPetugas(
+        cached
+      );
+
+      showInfo(
+        'Mode offline aktif. Petugas: ' +
+        (cached.nama || phone)
+      );
+
+      return;
+
     }
 
-    currentPetugas = petugas;
-
-    document.getElementById('petugasNama').textContent =
-      petugas.nama || phone;
-
-    document.getElementById('petugasId').textContent =
-      petugas.id || '-';
-
-    document.getElementById('loginOverlay')
-      .classList.add('hidden');
-
-    showInfo(
-      'Login berhasil. Petugas: ' +
-      (petugas.nama || phone)
+    throw new Error(
+      navigator.onLine
+        ? 'Nomor HP tidak terdaftar sebagai guru piket.'
+        : 'Nomor HP belum pernah diverifikasi saat online.'
     );
 
   }
   catch(error){
 
+    console.error(
+      'Login petugas gagal:',
+      error
+    );
+
     errorBox.textContent =
-      error && error.message
+      error &&
+      error.message
         ? error.message
         : String(error);
 
@@ -737,6 +800,49 @@ function normalizePhone(phone){
   }
 
   return value;
+
+}
+
+function setCurrentPetugas(petugas){
+
+  currentPetugas =
+    normalizePetugas(
+      petugas
+    );
+
+  const nameEl =
+    document.getElementById(
+      'petugasNama'
+    );
+
+  const idEl =
+    document.getElementById(
+      'petugasId'
+    );
+
+  if(nameEl){
+    nameEl.textContent =
+      currentPetugas.nama ||
+      currentPetugas.phone ||
+      '-';
+  }
+
+  if(idEl){
+    idEl.textContent =
+      currentPetugas.id ||
+      '-';
+  }
+
+  const overlay =
+    document.getElementById(
+      'loginOverlay'
+    );
+
+  if(overlay){
+    overlay.classList.add(
+      'hidden'
+    );
+  }
 
 }
 
@@ -805,16 +911,9 @@ async function restorePetugasLogin(){
 
     if(rows.length === 1){
 
-      currentPetugas = rows[0];
-
-      document.getElementById('petugasNama').textContent =
-        currentPetugas.nama || '-';
-
-      document.getElementById('petugasId').textContent =
-        currentPetugas.id || '-';
-
-      document.getElementById('loginOverlay')
-        .classList.add('hidden');
+      setCurrentPetugas(
+        rows[0]
+      );
 
     }
 
@@ -952,7 +1051,7 @@ function resetSyncedLocalData(){
     <div class="login-title">LOGIN GURU PIKET</div>
     <div class="login-subtitle">
       Masukkan nomor HP petugas untuk memulai scanner.<br>
-      
+      Petugas yang login akan tercatat pada setiap scan.<br>Login pertama memerlukan internet; setelah itu dapat digunakan offline.
     </div>
     <label class="login-label" for="petugasPhone">Nomor HP</label>
     <input id="petugasPhone" class="login-input" type="tel" inputmode="tel"
@@ -1633,166 +1732,139 @@ function initDatabase(){
    API GET / JSONP
 ===================================================== */
 
-function apiGet(
-  action
-){
+function apiGet(action, params){
 
-  return new Promise(
-    function(resolve,reject){
+  return new Promise(function(resolve,reject){
 
-      const callbackName =
-        '__scanner_' +
-        Date.now() +
-        '_' +
-        Math.random()
-          .toString(36)
-          .substring(2);
-
-
-      const script =
-        document.createElement(
-          'script'
-        );
-
-
-      let finished =
-        false;
-
-
-      const timeout =
-        setTimeout(
-          function(){
-
-            if(finished){
-              return;
-            }
-
-            finished =
-              true;
-
-            cleanup();
-
-            reject(
-              new Error(
-                'Backend tidak merespons.'
-              )
-            );
-
-          },
-          20000
-        );
-
-
-      function cleanup(){
-
-        clearTimeout(
-          timeout
-        );
-
-        if(
-          script.parentNode
-        ){
-
-          script.parentNode
-            .removeChild(
-              script
-            );
-
-        }
-
-        try{
-
-          delete window[
-            callbackName
-          ];
-
-        }
-        catch(error){
-
-          window[
-            callbackName
-          ] =
-            undefined;
-
-        }
-
-      }
-
-
-      window[
-        callbackName
-      ] =
-        function(data){
-
-          if(finished){
-            return;
-          }
-
-          finished =
-            true;
-
-          cleanup();
-
-          resolve(
-            data
-          );
-
-        };
-
-
-      script.onerror =
-        function(){
-
-          if(finished){
-            return;
-          }
-
-          finished =
-            true;
-
-          cleanup();
-
-          reject(
-            new Error(
-              'Gagal menghubungi server.'
-            )
-          );
-
-        };
-
-
-      const actionParts =
-        String(action || '').split('&');
-
-      const actionName =
-        actionParts.shift() || '';
-
-      const extraQuery =
-        actionParts.length
-          ? '&' + actionParts.join('&')
-          : '';
-
-      script.src =
-        API_URL +
-        '?action=' +
-        encodeURIComponent(
-          actionName
-        ) +
-        extraQuery +
-        '&callback=' +
-        encodeURIComponent(
-          callbackName
-        ) +
-        '&t=' +
-        Date.now();
-
-
-      document.head.appendChild(
-        script
+    const callbackName =
+      'jsonp_' +
+      Date.now() +
+      '_' +
+      Math.floor(
+        Math.random() * 100000
       );
 
+    const script =
+      document.createElement('script');
+
+    let finished = false;
+
+    function cleanup(){
+
+      if(script.parentNode){
+        script.parentNode.removeChild(
+          script
+        );
+      }
+
+      try{
+        delete window[callbackName];
+      }
+      catch(e){
+        window[callbackName] =
+          undefined;
+      }
+
     }
-  );
+
+    const timeout =
+      setTimeout(function(){
+
+        if(finished) return;
+
+        finished = true;
+        cleanup();
+
+        reject(
+          new Error(
+            'Server tidak merespons. Periksa URL Web App dan koneksi internet.'
+          )
+        );
+
+      },15000);
+
+    window[callbackName] =
+      function(data){
+
+        if(finished) return;
+
+        finished = true;
+        clearTimeout(timeout);
+        cleanup();
+
+        resolve(data);
+
+      };
+
+    const query =
+      new URLSearchParams();
+
+    query.set(
+      'action',
+      String(action || '')
+    );
+
+    if(params){
+
+      Object.keys(params)
+        .forEach(function(key){
+
+          const value =
+            params[key];
+
+          if(
+            value !== undefined &&
+            value !== null
+          ){
+
+            query.set(
+              key,
+              String(value)
+            );
+
+          }
+
+        });
+
+    }
+
+    query.set(
+      'callback',
+      callbackName
+    );
+
+    query.set(
+      't',
+      Date.now()
+    );
+
+    script.onerror =
+      function(){
+
+        if(finished) return;
+
+        finished = true;
+        clearTimeout(timeout);
+        cleanup();
+
+        reject(
+          new Error(
+            'Gagal menghubungi Scanner Offline API.'
+          )
+        );
+
+      };
+
+    script.src =
+      API_URL +
+      '?' +
+      query.toString();
+
+    document.head.appendChild(
+      script
+    );
+
+  });
 
 }
 
