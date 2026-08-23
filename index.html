@@ -3,215 +3,647 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <title>Scanner Offline • SMKN 1 Wakatobi</title>
+
+<!-- QR decoder -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <style>
 :root{
-  --bg:#050912;
-  --panel:#0d1727;
-  --panel2:#142238;
+  --bg:#030711;
+  --panel:#0b1422;
+  --panel2:#111d2f;
   --line:#ffffff18;
   --text:#f8fafc;
   --muted:#94a3b8;
-  --blue:#2298ff;
-  --cyan:#31dcff;
+  --blue:#2196f3;
+  --cyan:#22d3ee;
   --green:#22c55e;
   --orange:#f59e0b;
   --red:#ef4444;
-  --shadow:0 20px 50px #0009;
+  --shadow:0 20px 55px rgba(0,0,0,.48);
 }
-*{box-sizing:border-box}
+
+*{
+  box-sizing:border-box;
+}
+
 html,body{
   margin:0;
   min-height:100%;
   font-family:Arial,Helvetica,sans-serif;
   color:var(--text);
   background:
-    radial-gradient(circle at 15% 0%,#16476f 0,#08111e 32%,#03060c 78%);
+    radial-gradient(
+      circle at 10% 0%,
+      #16466b 0,
+      #07111e 32%,
+      #02050b 78%
+    );
 }
-body{min-height:100vh}
-button{font:inherit}
-.app{width:min(560px,100%);margin:auto;padding:10px}
+
+body{
+  min-height:100vh;
+}
+
+button{
+  font:inherit;
+}
+
+.app{
+  width:min(560px,100%);
+  margin:auto;
+  padding:10px;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
 
 .header{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
+
   padding:13px;
+
   border:1px solid var(--line);
   border-radius:20px;
-  background:linear-gradient(145deg,#ffffff18,#ffffff04);
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff16,
+      #ffffff03
+    );
+
   backdrop-filter:blur(18px);
+
   box-shadow:var(--shadow);
 }
-.brand{display:flex;align-items:center;gap:10px}
-.logo{
-  width:46px;height:46px;border-radius:14px;
-  display:grid;place-items:center;
-  font-weight:900;color:#101827;
-  background:linear-gradient(145deg,#fff,#cbd5e1 28%,#64748b 52%,#fff 70%,#64748b);
-  box-shadow:inset 0 1px #fff,0 8px 25px #0009;
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
-.title{font-size:15px;font-weight:900}
-.subtitle{font-size:9px;color:var(--muted);margin-top:3px}
+
+.logo{
+  width:46px;
+  height:46px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:14px;
+
+  color:#111827;
+  font-size:12px;
+  font-weight:900;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #cbd5e1 28%,
+      #64748b 52%,
+      #ffffff 70%,
+      #64748b
+    );
+
+  box-shadow:
+    inset 0 1px #fff,
+    0 8px 25px #0009;
+}
+
+.title{
+  font-size:15px;
+  font-weight:900;
+}
+
+.subtitle{
+  font-size:9px;
+  color:var(--muted);
+  margin-top:3px;
+}
 
 .network{
-  display:flex;align-items:center;gap:6px;
-  padding:7px 10px;border-radius:99px;
-  background:#0006;font-size:9px;font-weight:900;
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  padding:7px 10px;
+
+  border-radius:99px;
+
+  background:#0007;
+
+  font-size:9px;
+  font-weight:900;
 }
-.dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
-.network.online .dot{background:var(--green);box-shadow:0 0 12px var(--green)}
-.network.offline .dot{background:var(--orange);box-shadow:0 0 12px var(--orange)}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--red);
+}
+
+.network.online .dot{
+  background:var(--green);
+  box-shadow:0 0 12px var(--green);
+}
+
+.network.offline .dot{
+  background:var(--orange);
+  box-shadow:0 0 12px var(--orange);
+}
+
+/* =====================================================
+   PANEL
+===================================================== */
 
 .panel{
-  margin-top:10px;padding:12px;
+  margin-top:10px;
+  padding:12px;
+
   border:1px solid var(--line);
   border-radius:18px;
-  background:linear-gradient(145deg,#ffffff0e,#ffffff03);
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff0d,
+      #ffffff02
+    );
+
   box-shadow:var(--shadow);
 }
 
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.small-label{
-  font-size:9px;color:var(--muted);
-  font-weight:900;text-transform:uppercase;
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
-.master-count{font-size:13px;font-weight:900;margin-top:3px}
-.master-info{font-size:9px;color:var(--muted);margin-top:5px}
+
+.small-label{
+  font-size:9px;
+  color:var(--muted);
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.master-count{
+  font-size:13px;
+  font-weight:900;
+  margin-top:3px;
+}
+
+.master-info{
+  font-size:9px;
+  color:var(--muted);
+  margin-top:5px;
+}
 
 .btn{
-  border:0;border-radius:12px;
+  border:0;
+  border-radius:12px;
   padding:10px 12px;
+
   cursor:pointer;
-  font-size:9px;font-weight:900;
+
+  font-size:9px;
+  font-weight:900;
 }
+
+.btn:active{
+  transform:scale(.97);
+}
+
 .primary{
   color:#fff;
-  background:linear-gradient(145deg,#0ea5e9,#2563eb);
-  box-shadow:0 8px 20px #2563eb44,inset 0 1px #fff6;
+
+  background:
+    linear-gradient(
+      145deg,
+      #0ea5e9,
+      #2563eb
+    );
+
+  box-shadow:
+    0 8px 20px #2563eb44,
+    inset 0 1px #fff6;
 }
+
 .secondary{
   color:#e2e8f0;
-  background:#ffffff09;
+
+  background:#ffffff08;
+
   border:1px solid #ffffff18;
 }
 
+/* =====================================================
+   MODE
+===================================================== */
+
 .mode-title{
-  font-size:9px;color:var(--muted);
-  font-weight:900;letter-spacing:1px;
+  font-size:9px;
+  color:var(--muted);
+
+  font-weight:900;
+  letter-spacing:1px;
+
   margin-bottom:8px;
 }
-.mode-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+.mode-buttons{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
 .mode-btn{
   border:1px solid #ffffff15;
   border-radius:12px;
+
   padding:12px 5px;
+
   color:#cbd5e1;
   background:#ffffff07;
+
   cursor:pointer;
-  font-size:10px;font-weight:900;
-}
-.mode-btn.active{
-  color:#fff;
-  background:linear-gradient(145deg,#1677d2,#087f9f);
-  border-color:#38d9ff88;
-  box-shadow:0 8px 20px #0ea5e944,inset 0 1px #fff6;
+
+  font-size:10px;
+  font-weight:900;
 }
 
+.mode-btn.active{
+  color:#fff;
+
+  background:
+    linear-gradient(
+      145deg,
+      #1677d2,
+      #087f9f
+    );
+
+  border-color:#38d9ff88;
+
+  box-shadow:
+    0 8px 20px #0ea5e944,
+    inset 0 1px #fff6;
+}
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
 .scanner-head{
-  display:flex;justify-content:space-between;align-items:center;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
   margin-bottom:9px;
 }
-.scanner-title{font-size:14px;font-weight:900}
-.camera-status{font-size:8px;color:var(--muted)}
+
+.scanner-title{
+  font-size:14px;
+  font-weight:900;
+}
+
+.camera-status{
+  font-size:8px;
+  color:var(--muted);
+}
 
 .camera{
   position:relative;
+
   width:100%;
   aspect-ratio:1/1;
+
   overflow:hidden;
+
   border-radius:19px;
+
   background:#020617;
+
   border:1px solid #ffffff16;
-  box-shadow:inset 0 0 35px #000,0 12px 30px #0008;
+
+  box-shadow:
+    inset 0 0 35px #000,
+    0 12px 30px #0008;
 }
-video{width:100%;height:100%;display:block;object-fit:cover}
+
+video{
+  width:100%;
+  height:100%;
+
+  display:block;
+
+  object-fit:cover;
+}
+
+canvas{
+  display:none;
+}
+
 .scan-frame{
-  position:absolute;left:13%;top:13%;width:74%;height:74%;
+  position:absolute;
+
+  left:11%;
+  top:11%;
+
+  width:78%;
+  height:78%;
+
   border:2px solid var(--cyan);
+
   border-radius:20px;
-  box-shadow:0 0 20px #38d9ff77,0 0 0 999px #0004;
+
+  box-shadow:
+    0 0 20px #38d9ff77,
+    0 0 0 999px #0004;
+
   pointer-events:none;
 }
+
 .scan-line{
-  position:absolute;left:7%;right:7%;top:10%;height:2px;
-  background:linear-gradient(90deg,transparent,#fff,var(--cyan),transparent);
-  box-shadow:0 0 14px var(--cyan);
-  animation:line 2s linear infinite;
+  position:absolute;
+
+  left:7%;
+  right:7%;
+  top:10%;
+
+  height:2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #fff,
+      var(--cyan),
+      transparent
+    );
+
+  box-shadow:
+    0 0 14px var(--cyan);
+
+  animation:
+    scanline 1.8s linear infinite;
 }
-@keyframes line{
-  0%{transform:translateY(0);opacity:.2}
-  50%{opacity:1}
-  100%{transform:translateY(300px);opacity:.2}
+
+@keyframes scanline{
+
+  0%{
+    transform:translateY(0);
+    opacity:.2;
+  }
+
+  50%{
+    opacity:1;
+  }
+
+  100%{
+    transform:translateY(300px);
+    opacity:.2;
+  }
+
 }
+
 .camera-message{
-  position:absolute;inset:0;
-  display:grid;place-items:center;
-  text-align:center;padding:30px;
-  background:#020617cc;
-  color:#cbd5e1;font-size:12px;
+  position:absolute;
+
+  inset:0;
+
+  display:grid;
+  place-items:center;
+
+  text-align:center;
+
+  padding:30px;
+
+  background:#020617d9;
+
+  color:#cbd5e1;
+
+  font-size:12px;
+
+  line-height:1.6;
 }
-.hidden{display:none!important}
+
+.hidden{
+  display:none!important;
+}
+
+/* =====================================================
+   RESULT
+===================================================== */
 
 .result{
-  min-height:92px;
+  min-height:100px;
+
   margin-top:10px;
   padding:13px;
+
   border-radius:16px;
+
   background:#020617aa;
+
   border:1px solid var(--line);
 }
-.result-name{font-size:18px;font-weight:900}
-.result-info{font-size:10px;color:var(--muted);line-height:1.6;margin-top:5px}
+
+.result-name{
+  font-size:18px;
+  font-weight:900;
+}
+
+.result-info{
+  font-size:10px;
+  color:var(--muted);
+  line-height:1.7;
+  margin-top:5px;
+}
+
 .result-mode{
-  display:inline-block;margin-top:7px;
-  padding:4px 8px;border-radius:99px;
-  background:#38bdf822;color:#67e8f9;
-  font-size:9px;font-weight:900;
+  display:inline-block;
+
+  margin-top:7px;
+
+  padding:4px 8px;
+
+  border-radius:99px;
+
+  background:#38bdf822;
+  color:#67e8f9;
+
+  font-size:9px;
+  font-weight:900;
 }
-.success{color:#86efac}
-.error{color:#fca5a5}
 
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.success{
+  color:#86efac;
+}
 
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.error{
+  color:#fca5a5;
+}
+
+.warning{
+  color:#fde68a;
+}
+
+/* =====================================================
+   CONTROL
+===================================================== */
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+
+  gap:8px;
+
+  margin-top:10px;
+}
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+
+  gap:8px;
+
+  margin-top:10px;
+}
+
 .stat{
-  padding:11px 5px;text-align:center;border-radius:15px;
-  background:linear-gradient(145deg,#182438,#0c131f);
+  padding:11px 5px;
+
+  text-align:center;
+
+  border-radius:15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #182438,
+      #0c131f
+    );
+
   border:1px solid var(--line);
 }
-.stat-value{font-size:22px;font-weight:900}
-.stat-label{margin-top:3px;color:var(--muted);font-size:8px;font-weight:900}
 
-.sync-head{font-size:9px;font-weight:900}
-.sync-state{color:#86efac}
+.stat-value{
+  font-size:22px;
+  font-weight:900;
+}
+
+.stat-label{
+  margin-top:3px;
+
+  color:var(--muted);
+
+  font-size:8px;
+  font-weight:900;
+}
+
+/* =====================================================
+   SYNC
+===================================================== */
+
+.sync-head{
+  font-size:9px;
+  font-weight:900;
+}
+
+.sync-state{
+  color:#86efac;
+}
+
 .progress{
-  height:7px;margin-top:8px;overflow:hidden;
-  border-radius:99px;background:#020617;
-}
-.progress-bar{
-  width:0;height:100%;border-radius:99px;
-  background:linear-gradient(90deg,#0ea5e9,#22c55e);
-  transition:width .25s;
-}
-.sync-info{margin-top:6px;color:var(--muted);font-size:8px}
+  height:7px;
 
-.footer{text-align:center;padding:15px 5px 8px;color:#64748b;font-size:8px}
+  margin-top:8px;
+
+  overflow:hidden;
+
+  border-radius:99px;
+
+  background:#020617;
+}
+
+.progress-bar{
+  width:0;
+  height:100%;
+
+  border-radius:99px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #0ea5e9,
+      #22c55e
+    );
+
+  transition:
+    width .25s;
+}
+
+.sync-info{
+  margin-top:6px;
+
+  color:var(--muted);
+
+  font-size:8px;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.footer{
+  text-align:center;
+
+  padding:15px 5px 8px;
+
+  color:#64748b;
+
+  font-size:8px;
+
+  line-height:1.6;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:380px){
+
+  .app{
+    padding:7px;
+  }
+
+  .title{
+    font-size:13px;
+  }
+
+  .logo{
+    width:40px;
+    height:40px;
+  }
+
+}
 </style>
 </head>
 
@@ -219,154 +651,373 @@ video{width:100%;height:100%;display:block;object-fit:cover}
 
 <div class="app">
 
+<!-- ===================================================
+     HEADER
+=================================================== -->
+
 <header class="header">
+
   <div class="brand">
-    <div class="logo">QR</div>
-    <div>
-      <div class="title">SCANNER ABSENSI</div>
-      <div class="subtitle">SMKN 1 WAKATOBI</div>
+
+    <div class="logo">
+      QR
     </div>
+
+    <div>
+
+      <div class="title">
+        SCANNER ABSENSI
+      </div>
+
+      <div class="subtitle">
+        SMKN 1 WAKATOBI
+      </div>
+
+    </div>
+
   </div>
 
-  <div id="network" class="network offline">
+  <div
+    id="network"
+    class="network offline"
+  >
+
     <span class="dot"></span>
-    <span id="networkText">OFFLINE</span>
+
+    <span id="networkText">
+      OFFLINE
+    </span>
+
   </div>
+
 </header>
 
-<section class="panel">
-  <div class="row">
-    <div>
-      <div class="small-label">Database Siswa</div>
-      <div id="masterCount" class="master-count">Belum dimuat</div>
-    </div>
-    <button class="btn primary" onclick="refreshMaster()">↻ PERBARUI</button>
-  </div>
-  <div id="masterInfo" class="master-info">
-    Data siswa perlu diperbarui ketika online.
-  </div>
-</section>
+
+<!-- ===================================================
+     DATABASE SISWA
+=================================================== -->
 
 <section class="panel">
-  <div class="mode-title">MODE ABSENSI</div>
+
+  <div class="row">
+
+    <div>
+
+      <div class="small-label">
+        DATABASE SISWA
+      </div>
+
+      <div
+        id="masterCount"
+        class="master-count"
+      >
+        Memuat...
+      </div>
+
+    </div>
+
+    <button
+      class="btn primary"
+      onclick="refreshMaster()"
+    >
+      ↻ PERBARUI
+    </button>
+
+  </div>
+
+  <div
+    id="masterInfo"
+    class="master-info"
+  >
+    Menyiapkan database lokal...
+  </div>
+
+</section>
+
+
+<!-- ===================================================
+     MODE
+=================================================== -->
+
+<section class="panel">
+
+  <div class="mode-title">
+    MODE ABSENSI
+  </div>
 
   <div class="mode-buttons">
-    <button class="mode-btn active" data-mode="PAGI" onclick="setMode('PAGI')">PAGI</button>
-    <button class="mode-btn" data-mode="APEL" onclick="setMode('APEL')">APEL</button>
-    <button class="mode-btn" data-mode="SIANG" onclick="setMode('SIANG')">SIANG</button>
+
+    <button
+      class="mode-btn active"
+      data-mode="PAGI"
+      onclick="setMode('PAGI')"
+    >
+      PAGI
+    </button>
+
+    <button
+      class="mode-btn"
+      data-mode="APEL"
+      onclick="setMode('APEL')"
+    >
+      APEL
+    </button>
+
+    <button
+      class="mode-btn"
+      data-mode="SIANG"
+      onclick="setMode('SIANG')"
+    >
+      SIANG
+    </button>
+
   </div>
+
 </section>
+
+
+<!-- ===================================================
+     SCANNER
+=================================================== -->
 
 <section class="panel">
 
   <div class="scanner-head">
-    <div class="scanner-title">Scanner QR</div>
-    <div id="cameraStatus" class="camera-status">Kamera belum aktif</div>
+
+    <div class="scanner-title">
+      Scanner QR
+    </div>
+
+    <div
+      id="cameraStatus"
+      class="camera-status"
+    >
+      Kamera belum aktif
+    </div>
+
   </div>
+
 
   <div class="camera">
 
-    <video id="video" autoplay muted playsinline></video>
+    <video
+      id="video"
+      autoplay
+      muted
+      playsinline
+    ></video>
 
-    <div id="cameraMessage" class="camera-message">
+    <canvas
+      id="canvas"
+    ></canvas>
+
+    <div
+      id="cameraMessage"
+      class="camera-message"
+    >
       Tekan <b>MULAI SCANNER</b><br>
       untuk mengaktifkan kamera.
     </div>
 
-    <div id="scanFrame" class="scan-frame hidden">
+    <div
+      id="scanFrame"
+      class="scan-frame hidden"
+    >
+
       <div class="scan-line"></div>
+
     </div>
 
   </div>
 
-  <div id="result" class="result">
-    <div class="result-info">Belum ada scan.</div>
+
+  <div
+    id="result"
+    class="result"
+  >
+
+    <div class="result-info">
+      Belum ada scan.
+    </div>
+
   </div>
 
+
   <div class="controls">
-    <button id="startButton" class="btn primary" onclick="startScanner()">
+
+    <button
+      id="startButton"
+      class="btn primary"
+      onclick="startScanner()"
+    >
       ▶ MULAI SCANNER
     </button>
-    <button class="btn secondary" onclick="stopScanner()">
+
+    <button
+      class="btn secondary"
+      onclick="stopScanner()"
+    >
       ■ STOP
     </button>
+
   </div>
 
 </section>
+
+
+<!-- ===================================================
+     STATISTIK
+=================================================== -->
 
 <section class="stats">
 
   <div class="stat">
-    <div id="todayCount" class="stat-value">0</div>
-    <div class="stat-label">Scan Hari Ini</div>
+
+    <div
+      id="todayCount"
+      class="stat-value"
+    >
+      0
+    </div>
+
+    <div class="stat-label">
+      SCAN HARI INI
+    </div>
+
   </div>
 
-  <div class="stat">
-    <div id="pendingCount" class="stat-value">0</div>
-    <div class="stat-label">Belum Terkirim</div>
-  </div>
 
   <div class="stat">
-    <div id="syncedCount" class="stat-value">0</div>
-    <div class="stat-label">Tersinkron</div>
+
+    <div
+      id="pendingCount"
+      class="stat-value"
+    >
+      0
+    </div>
+
+    <div class="stat-label">
+      BELUM TERKIRIM
+    </div>
+
+  </div>
+
+
+  <div class="stat">
+
+    <div
+      id="syncedCount"
+      class="stat-value"
+    >
+      0
+    </div>
+
+    <div class="stat-label">
+      TERSINKRON
+    </div>
+
   </div>
 
 </section>
 
+
+<!-- ===================================================
+     STATUS SYNC
+=================================================== -->
+
 <section class="panel">
 
   <div class="row sync-head">
-    <span>STATUS SINKRONISASI</span>
-    <span id="syncState" class="sync-state">SIAP</span>
+
+    <span>
+      STATUS SINKRONISASI
+    </span>
+
+    <span
+      id="syncState"
+      class="sync-state"
+    >
+      SIAP
+    </span>
+
   </div>
+
 
   <div class="progress">
-    <div id="progressBar" class="progress-bar"></div>
+
+    <div
+      id="progressBar"
+      class="progress-bar"
+    ></div>
+
   </div>
 
-  <div id="syncInfo" class="sync-info">
+
+  <div
+    id="syncInfo"
+    class="sync-info"
+  >
     Data scan disimpan lokal pada perangkat.
   </div>
 
 </section>
 
+
 <div class="footer">
+
   Scanner Offline • SMKN 1 Wakatobi<br>
-  Data akan dikirim otomatis ketika internet tersedia.
+
+  Data scan tetap tersimpan walaupun internet mati.
+
 </div>
 
 </div>
+
 
 <script>
 
 /* =====================================================
-   KONFIGURASI BACKEND
+   KONFIGURASI
 ===================================================== */
 
 const API_URL =
 'https://script.google.com/macros/s/AKfycbwJwJVkdE-VH-c1ZASwV63GGQ1LC-0E3hNKZVf25SheEyzxthiA89q1fT09hG9h3RTY/exec';
 
-
-/*
- * Nama database lokal.
- */
 const DB_NAME =
-  'SMKN1_SCANNER_OFFLINE';
+'SMKN1_SCANNER_OFFLINE';
 
-const DB_VERSION = 1;
+const DB_VERSION =
+1;
 
-const STORE_SCAN = 'SCAN';
-const STORE_STUDENT = 'STUDENT';
+const STORE_SCAN =
+'SCAN';
 
-let db = null;
-let currentMode = 'PAGI';
-let stream = null;
-let scanning = false;
-let animationId = null;
-let detector = null;
-let lastQR = '';
-let lastQRTime = 0;
-let syncRunning = false;
+const STORE_STUDENT =
+'STUDENT';
+
+let db =
+null;
+
+let currentMode =
+'PAGI';
+
+let stream =
+null;
+
+let scanning =
+false;
+
+let scanTimer =
+null;
+
+let lastQR =
+'';
+
+let lastQRTime =
+0;
+
+let syncRunning =
+false;
 
 
 /* =====================================================
@@ -375,7 +1026,7 @@ let syncRunning = false;
 
 document.addEventListener(
   'DOMContentLoaded',
-  async () => {
+  async function(){
 
     try{
 
@@ -387,31 +1038,11 @@ document.addEventListener(
 
       await updateMasterInfo();
 
-      /*
-       * Service worker.
-       */
+      registerServiceWorker();
+
       if(
-        'serviceWorker' in navigator
+        navigator.onLine
       ){
-
-        try{
-
-          await navigator.serviceWorker.register(
-            './sw.js'
-          );
-
-        }catch(e){
-
-          console.log(
-            'Service worker belum tersedia:',
-            e
-          );
-
-        }
-
-      }
-
-      if(navigator.onLine){
 
         setTimeout(
           refreshMaster,
@@ -420,16 +1051,17 @@ document.addEventListener(
 
         setTimeout(
           syncPending,
-          1500
+          1800
         );
 
       }
 
-    }catch(err){
+    }
+    catch(error){
 
       showError(
         'Inisialisasi gagal: ' +
-        err.message
+        error.message
       );
 
     }
@@ -439,34 +1071,78 @@ document.addEventListener(
 
 
 /* =====================================================
+   SERVICE WORKER
+===================================================== */
+
+function registerServiceWorker(){
+
+  if(
+    !('serviceWorker' in navigator)
+  ){
+
+    return;
+
+  }
+
+  navigator.serviceWorker
+    .register(
+      './sw.js'
+    )
+    .catch(
+      function(error){
+
+        console.log(
+          'Service Worker:',
+          error
+        );
+
+      }
+    );
+
+}
+
+
+/* =====================================================
    NETWORK
 ===================================================== */
 
 window.addEventListener(
   'online',
-  () => {
+  function(){
 
     updateNetwork();
 
+    showInfo(
+      'Internet tersedia. Memulai sinkronisasi...'
+    );
+
     refreshMaster();
 
-    syncPending();
+    setTimeout(
+      syncPending,
+      1000
+    );
 
   }
 );
 
 window.addEventListener(
   'offline',
-  () => {
+  function(){
 
     updateNetwork();
+
+    showInfo(
+      'OFFLINE. Scan tetap dapat digunakan.'
+    );
 
   }
 );
 
+
 function updateNetwork(){
 
-  const el =
+  const network =
     document.getElementById(
       'network'
     );
@@ -476,17 +1152,20 @@ function updateNetwork(){
       'networkText'
     );
 
-  if(navigator.onLine){
+  if(
+    navigator.onLine
+  ){
 
-    el.className =
+    network.className =
       'network online';
 
     text.textContent =
       'ONLINE';
 
-  }else{
+  }
+  else{
 
-    el.className =
+    network.className =
       'network offline';
 
     text.textContent =
@@ -498,13 +1177,13 @@ function updateNetwork(){
 
 
 /* =====================================================
-   INDEXEDDB
+   INDEXED DB
 ===================================================== */
 
 function initDatabase(){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const request =
         indexedDB.open(
@@ -512,18 +1191,22 @@ function initDatabase(){
           DB_VERSION
         );
 
+
       request.onupgradeneeded =
-        event => {
+        function(event){
 
           const database =
             event.target.result;
 
+
           if(
             !database.objectStoreNames
-              .contains(STORE_SCAN)
+              .contains(
+                STORE_SCAN
+              )
           ){
 
-            const store =
+            const scanStore =
               database.createObjectStore(
                 STORE_SCAN,
                 {
@@ -532,40 +1215,49 @@ function initDatabase(){
                 }
               );
 
-            store.createIndex(
+
+            scanStore.createIndex(
               'status',
               'status',
-              {unique:false}
+              {
+                unique:false
+              }
             );
 
-            store.createIndex(
+
+            scanStore.createIndex(
               'tanggal',
               'tanggal',
-              {unique:false}
+              {
+                unique:false
+              }
             );
 
           }
 
+
           if(
             !database.objectStoreNames
-              .contains(STORE_STUDENT)
+              .contains(
+                STORE_STUDENT
+              )
           ){
 
-            const store =
-              database.createObjectStore(
-                STORE_STUDENT,
-                {
-                  keyPath:
-                    'idSiswa'
-                }
-              );
+            database.createObjectStore(
+              STORE_STUDENT,
+              {
+                keyPath:
+                  'idSiswa'
+              }
+            );
 
           }
 
         };
 
+
       request.onsuccess =
-        event => {
+        function(event){
 
           db =
             event.target.result;
@@ -574,10 +1266,15 @@ function initDatabase(){
 
         };
 
+
       request.onerror =
-        () => reject(
-          request.error
-        );
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
 
     }
   );
@@ -586,40 +1283,45 @@ function initDatabase(){
 
 
 /* =====================================================
-   API
+   API GET / JSONP
 ===================================================== */
 
-/*
- * Apps Script Web App API memakai JSONP.
- *
- * Alasannya:
- * GitHub Pages berbeda origin dengan Apps Script.
- *
- * JSONP memungkinkan browser mengambil data
- * tanpa terkena CORS pada endpoint doGet().
- */
-
-function apiGet(action){
+function apiGet(
+  action
+){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
-      const callback =
-        '__scannerCallback_' +
+      const callbackName =
+        '__scanner_' +
         Date.now() +
         '_' +
         Math.random()
           .toString(36)
-          .slice(2);
+          .substring(2);
+
 
       const script =
         document.createElement(
           'script'
         );
 
+
+      let finished =
+        false;
+
+
       const timeout =
         setTimeout(
-          () => {
+          function(){
+
+            if(finished){
+              return;
+            }
+
+            finished =
+              true;
 
             cleanup();
 
@@ -632,6 +1334,7 @@ function apiGet(action){
           },
           20000
         );
+
 
       function cleanup(){
 
@@ -652,277 +1355,75 @@ function apiGet(action){
 
         try{
 
-          delete window[callback];
+          delete window[
+            callbackName
+          ];
 
-        }catch(e){
+        }
+        catch(error){
 
-          window[callback] =
+          window[
+            callbackName
+          ] =
             undefined;
 
         }
 
       }
 
-      window[callback] =
-        data => {
+
+      window[
+        callbackName
+      ] =
+        function(data){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
 
           cleanup();
 
-          resolve(data);
+          resolve(
+            data
+          );
 
         };
 
+
       script.onerror =
-        () => {
+        function(){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
 
           cleanup();
 
           reject(
             new Error(
-              'Gagal menghubungi backend.'
+              'Gagal menghubungi server.'
             )
           );
 
         };
+
 
       script.src =
         API_URL +
         '?action=' +
-        encodeURIComponent(action) +
-        '&callback=' +
-        encodeURIComponent(callback) +
-        '&t=' +
-        Date.now();
-
-      document.head.appendChild(
-        script
-      );
-
-    }
-  );
-
-}
-
-
-/*
- * POST sinkronisasi.
- *
- * Untuk keamanan browser dan Apps Script,
- * kita kirim melalui form request.
- */
-function apiSync(batch){
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const callback =
-        '__syncCallback_' +
-        Date.now() +
-        '_' +
-        Math.random()
-          .toString(36)
-          .slice(2);
-
-      const form =
-        document.createElement(
-          'form'
-        );
-
-      form.method =
-        'POST';
-
-      form.action =
-        API_URL;
-
-      form.target =
-        'scanner_sync_frame';
-
-      form.style.display =
-        'none';
-
-      const payload =
-        document.createElement(
-          'input'
-        );
-
-      payload.name =
-        'payload';
-
-      payload.value =
-        JSON.stringify({
-          action:
-            'syncOfflineBatch',
-          transactions:
-            batch,
-          callback:
-            callback
-        });
-
-      form.appendChild(
-        payload
-      );
-
-      document.body.appendChild(
-        form
-      );
-
-
-      /*
-       * Karena Apps Script Web App dapat
-       * merespons redirect, gunakan iframe.
-       */
-      let frame =
-        document.getElementById(
-          'scanner_sync_frame'
-        );
-
-      if(!frame){
-
-        frame =
-          document.createElement(
-            'iframe'
-          );
-
-        frame.id =
-          'scanner_sync_frame';
-
-        frame.name =
-          'scanner_sync_frame';
-
-        frame.style.display =
-          'none';
-
-        document.body.appendChild(
-          frame
-        );
-
-      }
-
-
-      /*
-       * Untuk tahap awal kita menggunakan
-       * GET endpoint khusus sinkronisasi.
-       *
-       * Payload dikirim sebagai base64.
-       */
-      form.remove();
-
-
-      /*
-       * Gunakan endpoint GET agar kompatibel
-       * dengan Apps Script.
-       */
-      apiSyncGet(
-        batch
-      )
-      .then(resolve)
-      .catch(reject);
-
-    }
-  );
-
-}
-
-
-function apiSyncGet(batch){
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const callback =
-        '__batchCallback_' +
-        Date.now() +
-        '_' +
-        Math.random()
-          .toString(36)
-          .slice(2);
-
-      const script =
-        document.createElement(
-          'script'
-        );
-
-      const timeout =
-        setTimeout(
-          () => {
-
-            cleanup();
-
-            reject(
-              new Error(
-                'Sinkronisasi timeout.'
-              )
-            );
-
-          },
-          30000
-        );
-
-      function cleanup(){
-
-        clearTimeout(timeout);
-
-        if(script.parentNode){
-
-          script.parentNode
-            .removeChild(
-              script
-            );
-
-        }
-
-        try{
-
-          delete window[callback];
-
-        }catch(e){
-
-          window[callback] =
-            undefined;
-
-        }
-
-      }
-
-      window[callback] =
-        data => {
-
-          cleanup();
-
-          resolve(data);
-
-        };
-
-
-      /*
-       * Data JSON dikirim encoded.
-       */
-      const encoded =
         encodeURIComponent(
-          JSON.stringify(batch)
-        );
-
-      script.onerror =
-        () => {
-
-          cleanup();
-
-          reject(
-            new Error(
-              'Gagal mengirim batch.'
-            )
-          );
-
-        };
-
-
-      script.src =
-        API_URL +
-        '?action=syncOfflineBatch' +
-        '&data=' +
-        encoded +
+          action
+        ) +
         '&callback=' +
-        encodeURIComponent(callback) +
+        encodeURIComponent(
+          callbackName
+        ) +
         '&t=' +
         Date.now();
 
@@ -938,63 +1439,254 @@ function apiSyncGet(batch){
 
 
 /* =====================================================
-   MASTER
+   SYNC GET / JSONP
+===================================================== */
+
+/*
+ * Setiap transaksi dikirim satu per satu.
+ *
+ * Keuntungannya:
+ *
+ * - tidak ada URL terlalu panjang;
+ * - hasil server dapat dibaca;
+ * - jika gagal, transaksi tetap PENDING;
+ * - jika internet kembali, otomatis dicoba lagi.
+ */
+
+function apiSyncOne(
+  transaction
+){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const callbackName =
+        '__sync_' +
+        Date.now() +
+        '_' +
+        Math.random()
+          .toString(36)
+          .substring(2);
+
+
+      const script =
+        document.createElement(
+          'script'
+        );
+
+
+      let finished =
+        false;
+
+
+      const data =
+        encodeURIComponent(
+          JSON.stringify([
+            transaction
+          ])
+        );
+
+
+      const timeout =
+        setTimeout(
+          function(){
+
+            if(finished){
+              return;
+            }
+
+            finished =
+              true;
+
+            cleanup();
+
+            reject(
+              new Error(
+                'Timeout sinkronisasi.'
+              )
+            );
+
+          },
+          25000
+        );
+
+
+      function cleanup(){
+
+        clearTimeout(
+          timeout
+        );
+
+        if(
+          script.parentNode
+        ){
+
+          script.parentNode
+            .removeChild(
+              script
+            );
+
+        }
+
+        try{
+
+          delete window[
+            callbackName
+          ];
+
+        }
+        catch(error){
+
+          window[
+            callbackName
+          ] =
+            undefined;
+
+        }
+
+      }
+
+
+      window[
+        callbackName
+      ] =
+        function(response){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
+
+          cleanup();
+
+          resolve(
+            response
+          );
+
+        };
+
+
+      script.onerror =
+        function(){
+
+          if(finished){
+            return;
+          }
+
+          finished =
+            true;
+
+          cleanup();
+
+          reject(
+            new Error(
+              'Gagal mengirim data.'
+            )
+          );
+
+        };
+
+
+      script.src =
+        API_URL +
+        '?action=syncOfflineBatch' +
+        '&data=' +
+        data +
+        '&callback=' +
+        encodeURIComponent(
+          callbackName
+        ) +
+        '&t=' +
+        Date.now();
+
+
+      document.head.appendChild(
+        script
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   MASTER SISWA
 ===================================================== */
 
 async function refreshMaster(){
 
-  if(!navigator.onLine){
+  if(
+    !navigator.onLine
+  ){
+
+    await updateMasterInfo();
 
     showInfo(
-      'Offline. Database siswa lokal tetap digunakan.'
+      'OFFLINE. Database lokal digunakan.'
     );
 
     return;
 
   }
 
+
   setMasterStatus(
-    'Mengambil data...'
+    'Mengambil data siswa...'
   );
+
 
   try{
 
-    const data =
+    const response =
       await apiGet(
         'getMasterSiswa'
       );
 
+
     if(
-      !data ||
-      !data.ok
+      !response ||
+      !response.ok
     ){
 
       throw new Error(
-        'Data master tidak valid.'
+        response &&
+        response.error
+          ? response.error
+          : 'Data master tidak valid.'
       );
 
     }
 
+
     await saveStudents(
-      data.students || []
+      response.students ||
+      []
     );
+
 
     await updateMasterInfo();
 
+
     showInfo(
-      'Database siswa diperbarui: ' +
-      (data.students || []).length +
+      'Database diperbarui. ' +
+      (
+        response.students ||
+        []
+      ).length +
       ' siswa aktif.'
     );
 
-  }catch(err){
+  }
+  catch(error){
 
-    setMasterStatus(
-      'Gagal diperbarui'
-    );
+    await updateMasterInfo();
 
     showError(
-      err.message
+      'Gagal memperbarui siswa: ' +
+      error.message
     );
 
   }
@@ -1002,10 +1694,12 @@ async function refreshMaster(){
 }
 
 
-function saveStudents(students){
+function saveStudents(
+  students
+){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
@@ -1013,37 +1707,94 @@ function saveStudents(students){
           'readwrite'
         );
 
+
       const store =
         transaction.objectStore(
           STORE_STUDENT
         );
 
+
       store.clear();
 
-      students.forEach(
-        student => {
+
+      (
+        students ||
+        []
+      ).forEach(
+        function(student){
 
           if(
             student &&
             student.idSiswa
           ){
 
-            store.put(
-              student
-            );
+            store.put({
+
+              idSiswa:
+                String(
+                  student.idSiswa
+                ).trim(),
+
+              nis:
+                String(
+                  student.nis ||
+                  ''
+                ).trim(),
+
+              nama:
+                String(
+                  student.nama ||
+                  ''
+                ).trim(),
+
+              tingkat:
+                String(
+                  student.tingkat ||
+                  ''
+                ).trim(),
+
+              jurusan:
+                String(
+                  student.jurusan ||
+                  ''
+                ).trim(),
+
+              kelas:
+                String(
+                  student.kelas ||
+                  ''
+                ).trim(),
+
+              idBarcode:
+                String(
+                  student.idBarcode ||
+                  student.idSiswa
+                ).trim()
+
+            });
 
           }
 
         }
       );
 
+
       transaction.oncomplete =
-        resolve;
+        function(){
+
+          resolve();
+
+        };
+
 
       transaction.onerror =
-        () => reject(
-          transaction.error
-        );
+        function(){
+
+          reject(
+            transaction.error
+          );
+
+        };
 
     }
   );
@@ -1051,10 +1802,12 @@ function saveStudents(students){
 }
 
 
-function getStudent(id){
+function getStudent(
+  id
+){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
@@ -1062,24 +1815,84 @@ function getStudent(id){
           'readonly'
         );
 
+
       const request =
         transaction
           .objectStore(
             STORE_STUDENT
           )
           .get(
-            String(id).trim()
+            String(
+              id
+            ).trim()
           );
 
+
       request.onsuccess =
-        () => resolve(
-          request.result || null
-        );
+        function(){
+
+          resolve(
+            request.result ||
+            null
+          );
+
+        };
+
 
       request.onerror =
-        () => reject(
-          request.error
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
+
+    }
+  );
+
+}
+
+
+function getAllStudents(){
+
+  return new Promise(
+    function(resolve,reject){
+
+      const transaction =
+        db.transaction(
+          STORE_STUDENT,
+          'readonly'
         );
+
+
+      const request =
+        transaction
+          .objectStore(
+            STORE_STUDENT
+          )
+          .getAll();
+
+
+      request.onsuccess =
+        function(){
+
+          resolve(
+            request.result ||
+            []
+          );
+
+        };
+
+
+      request.onerror =
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
 
     }
   );
@@ -1092,58 +1905,29 @@ async function updateMasterInfo(){
   const students =
     await getAllStudents();
 
+
   document.getElementById(
     'masterCount'
   ).textContent =
     students.length
-      ? students.length + ' siswa aktif'
+      ? students.length +
+        ' siswa aktif'
       : 'Belum tersedia';
+
 
   document.getElementById(
     'masterInfo'
   ).textContent =
     students.length
       ? 'Database lokal siap digunakan offline.'
-      : 'Tekan PERBARUI ketika online.';
+      : 'Hubungkan internet lalu tekan PERBARUI.';
 
 }
 
 
-function getAllStudents(){
-
-  return new Promise(
-    (resolve,reject) => {
-
-      const transaction =
-        db.transaction(
-          STORE_STUDENT,
-          'readonly'
-        );
-
-      const request =
-        transaction
-          .objectStore(
-            STORE_STUDENT
-          )
-          .getAll();
-
-      request.onsuccess =
-        () => resolve(
-          request.result || []
-        );
-
-      request.onerror =
-        () => reject(
-          request.error
-        );
-
-    }
-  );
-
-}
-
-
-function setMasterStatus(text){
+function setMasterStatus(
+  text
+){
 
   document.getElementById(
     'masterCount'
@@ -1157,28 +1941,33 @@ function setMasterStatus(text){
    MODE
 ===================================================== */
 
-function setMode(mode){
+function setMode(
+  mode
+){
 
   currentMode =
     mode;
+
 
   document
     .querySelectorAll(
       '.mode-btn'
     )
     .forEach(
-      button => {
+      function(button){
 
         button.classList.toggle(
           'active',
-          button.dataset.mode === mode
+          button.dataset.mode ===
+          mode
         );
 
       }
     );
 
+
   showInfo(
-    'Mode aktif: ' +
+    'Mode absensi aktif: ' +
     mode
   );
 
@@ -1191,9 +1980,14 @@ function setMode(mode){
 
 async function startScanner(){
 
-  if(scanning){
+  if(
+    scanning
+  ){
+
     return;
+
   }
+
 
   if(
     !navigator.mediaDevices ||
@@ -1201,54 +1995,92 @@ async function startScanner(){
   ){
 
     showError(
-      'Browser tidak mendukung kamera.'
+      'Browser tidak mendukung akses kamera.'
     );
 
     return;
 
   }
 
+
+  if(
+    typeof jsQR !==
+    'function'
+  ){
+
+    showError(
+      'QR Scanner belum termuat. Pastikan halaman dibuka melalui HTTPS dan muat ulang.'
+    );
+
+    return;
+
+  }
+
+
   try{
 
     stream =
       await navigator.mediaDevices
         .getUserMedia({
+
           audio:false,
+
           video:{
             facingMode:{
-              ideal:'environment'
+              ideal:
+                'environment'
             },
+
             width:{
-              ideal:1280
+              ideal:
+                1280
             },
+
             height:{
-              ideal:720
+              ideal:
+                720
             }
           }
+
         });
+
+
+    const video =
+      document.getElementById(
+        'video'
+      );
+
 
     video.srcObject =
       stream;
 
+
     await video.play();
+
 
     scanning =
       true;
 
-    cameraMessage
-      .classList.add(
-        'hidden'
-      );
 
-    scanFrame
-      .classList.remove(
-        'hidden'
-      );
+    document.getElementById(
+      'cameraMessage'
+    ).classList.add(
+      'hidden'
+    );
+
+
+    document.getElementById(
+      'scanFrame'
+    ).classList.remove(
+      'hidden'
+    );
+
 
     document.getElementById(
       'cameraStatus'
     ).textContent =
       'Kamera aktif';
+
 
     document.getElementById(
       'startButton'
@@ -1256,39 +2088,17 @@ async function startScanner(){
       '● SCANNER AKTIF';
 
 
-    if(
-      'BarcodeDetector' in window
-    ){
+    scanFrame();
 
-      detector =
-        new BarcodeDetector({
-          formats:[
-            'qr_code'
-          ]
-        });
-
-      scanLoop();
-
-    }else{
-
-      /*
-       * Fallback ke QR library melalui
-       * canvas decoding belum diaktifkan.
-       */
-      showError(
-        'Browser belum mendukung QR Scanner. Gunakan Chrome Android terbaru.'
-      );
-
-    }
-
-  }catch(err){
+  }
+  catch(error){
 
     showError(
       'Kamera gagal dibuka: ' +
       (
-        err.message ||
-        err.name ||
-        err
+        error.message ||
+        error.name ||
+        error
       )
     );
 
@@ -1302,47 +2112,71 @@ function stopScanner(){
   scanning =
     false;
 
-  if(animationId){
+
+  if(
+    scanTimer
+  ){
 
     cancelAnimationFrame(
-      animationId
+      scanTimer
     );
 
-    animationId =
+    scanTimer =
       null;
 
   }
 
-  if(stream){
+
+  if(
+    stream
+  ){
 
     stream
       .getTracks()
       .forEach(
-        track => track.stop()
+        function(track){
+
+          track.stop();
+
+        }
       );
+
 
     stream =
       null;
 
   }
 
+
+  const video =
+    document.getElementById(
+      'video'
+    );
+
+
   video.srcObject =
     null;
 
-  cameraMessage
-    .classList.remove(
-      'hidden'
-    );
 
-  scanFrame
-    .classList.add(
-      'hidden'
-    );
+  document.getElementById(
+    'cameraMessage'
+  ).classList.remove(
+    'hidden'
+  );
+
+
+  document.getElementById(
+    'scanFrame'
+  ).classList.add(
+    'hidden'
+  );
+
 
   document.getElementById(
     'cameraStatus'
   ).textContent =
     'Kamera belum aktif';
+
 
   document.getElementById(
     'startButton'
@@ -1352,45 +2186,129 @@ function stopScanner(){
 }
 
 
-function scanLoop(){
+function scanFrame(){
 
-  if(!scanning){
+  if(
+    !scanning
+  ){
+
     return;
+
   }
 
-  detector
-    .detect(video)
-    .then(
-      codes => {
 
-        if(
-          codes &&
-          codes.length
-        ){
-
-          const raw =
-            codes[0].rawValue ||
-            '';
-
-          if(raw){
-
-            handleQR(
-              raw
-            );
-
-          }
-
-        }
-
-      }
-    )
-    .catch(
-      () => {}
+  const video =
+    document.getElementById(
+      'video'
     );
 
-  animationId =
+  const canvas =
+    document.getElementById(
+      'canvas'
+    );
+
+
+  if(
+    video.readyState !==
+    video.HAVE_ENOUGH_DATA
+  ){
+
+    scanTimer =
+      requestAnimationFrame(
+        scanFrame
+      );
+
+    return;
+
+  }
+
+
+  const width =
+    video.videoWidth;
+
+  const height =
+    video.videoHeight;
+
+
+  if(
+    !width ||
+    !height
+  ){
+
+    scanTimer =
+      requestAnimationFrame(
+        scanFrame
+      );
+
+    return;
+
+  }
+
+
+  /*
+   * Ukuran canvas disesuaikan.
+   */
+  canvas.width =
+    width;
+
+  canvas.height =
+    height;
+
+
+  const context =
+    canvas.getContext(
+      '2d',
+      {
+        willReadFrequently:true
+      }
+    );
+
+
+  context.drawImage(
+    video,
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  const image =
+    context.getImageData(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+  const code =
+    jsQR(
+      image.data,
+      image.width,
+      image.height,
+      {
+        inversionAttempts:
+          'dontInvert'
+      }
+    );
+
+
+  if(
+    code &&
+    code.data
+  ){
+
+    handleQR(
+      code.data
+    );
+
+  }
+
+
+  scanTimer =
     requestAnimationFrame(
-      scanLoop
+      scanFrame
     );
 
 }
@@ -1400,27 +2318,46 @@ function scanLoop(){
    QR
 ===================================================== */
 
-async function handleQR(raw){
+async function handleQR(
+  raw
+){
 
   const value =
-    String(raw)
-      .trim();
+    String(
+      raw ||
+      ''
+    ).trim();
 
-  if(!value){
-    return;
-  }
-
-  const now =
-    Date.now();
 
   if(
-    value === lastQR &&
-    now - lastQRTime < 2500
+    !value
   ){
 
     return;
 
   }
+
+
+  const now =
+    Date.now();
+
+
+  /*
+   * Cegah QR yang sama terbaca
+   * berulang-ulang dalam 3 detik.
+   */
+  if(
+    value ===
+    lastQR &&
+    now -
+    lastQRTime <
+    3000
+  ){
+
+    return;
+
+  }
+
 
   lastQR =
     value;
@@ -1428,32 +2365,19 @@ async function handleQR(raw){
   lastQRTime =
     now;
 
+
   const idSiswa =
     extractIdSiswa(
       value
     );
 
-  if(!idSiswa){
+
+  if(
+    !idSiswa
+  ){
 
     showError(
-      'QR tidak berisi ID_SISWA.'
-    );
-
-    return;
-
-  }
-
-  const student =
-    await getStudent(
-      idSiswa
-    );
-
-  if(!student){
-
-    showError(
-      'ID_SISWA ' +
-      idSiswa +
-      ' belum tersedia di database lokal.'
+      'QR tidak berisi ID_SISWA yang valid.'
     );
 
     beepError();
@@ -1462,11 +2386,36 @@ async function handleQR(raw){
 
   }
 
+
+  const student =
+    await getStudent(
+      idSiswa
+    );
+
+
+  if(
+    !student
+  ){
+
+    showError(
+      'ID_SISWA ' +
+      idSiswa +
+      ' tidak ditemukan di database lokal.'
+    );
+
+    beepError();
+
+    return;
+
+  }
+
+
   const item =
     createTransaction(
       student,
       value
     );
+
 
   try{
 
@@ -1474,9 +2423,11 @@ async function handleQR(raw){
       item
     );
 
+
     showSuccess(
       item
     );
+
 
     beep();
 
@@ -1484,16 +2435,21 @@ async function handleQR(raw){
 
     await updateStats();
 
-    if(navigator.onLine){
+
+    if(
+      navigator.onLine
+    ){
 
       syncPending();
 
     }
 
-  }catch(err){
+  }
+  catch(error){
 
     showError(
-      err.message
+      'Gagal menyimpan scan: ' +
+      error.message
     );
 
   }
@@ -1501,38 +2457,50 @@ async function handleQR(raw){
 }
 
 
-function extractIdSiswa(value){
+function extractIdSiswa(
+  value
+){
 
   /*
-   * QR normal:
+   * Format paling sederhana:
+   *
    * S001
+   * 001
+   * ID001
    */
   if(
-    /^[A-Za-z0-9_-]+$/.test(
-      value
-    )
+    /^[A-Za-z0-9_-]+$/
+      .test(
+        value
+      )
   ){
 
     return value;
 
   }
 
+
   /*
-   * JSON:
+   * Jika QR berupa JSON.
    */
   try{
 
-    const obj =
-      JSON.parse(value);
+    const object =
+      JSON.parse(
+        value
+      );
+
 
     return String(
-      obj.ID_SISWA ||
-      obj.idSiswa ||
-      obj.id ||
+      object.ID_SISWA ||
+      object.idSiswa ||
+      object.ID ||
+      object.id ||
       ''
     ).trim();
 
-  }catch(e){
+  }
+  catch(error){
 
     return '';
 
@@ -1542,7 +2510,7 @@ function extractIdSiswa(value){
 
 
 /* =====================================================
-   TRANSAKSI
+   TRANSACTION
 ===================================================== */
 
 function createTransaction(
@@ -1553,10 +2521,11 @@ function createTransaction(
   const now =
     new Date();
 
+
   return {
 
     transactionId:
-      generateId(),
+      generateTransactionId(),
 
     idSiswa:
       student.idSiswa,
@@ -1574,10 +2543,14 @@ function createTransaction(
       student.jurusan,
 
     tanggal:
-      formatDate(now),
+      formatDate(
+        now
+      ),
 
     jam:
-      formatTime(now),
+      formatTime(
+        now
+      ),
 
     mode:
       currentMode,
@@ -1596,25 +2569,34 @@ function createTransaction(
 }
 
 
-function generateId(){
+function generateTransactionId(){
 
   return (
-    Date.now().toString(36) +
+
+    Date.now()
+      .toString(36) +
+
     '-' +
+
     Math.random()
       .toString(36)
-      .slice(2) +
+      .substring(2) +
+
     '-' +
+
     currentMode
+
   );
 
 }
 
 
-function saveScan(item){
+function saveScan(
+  item
+){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
@@ -1622,19 +2604,32 @@ function saveScan(item){
           'readwrite'
         );
 
+
       transaction
         .objectStore(
           STORE_SCAN
         )
-        .put(item);
+        .put(
+          item
+        );
+
 
       transaction.oncomplete =
-        resolve;
+        function(){
+
+          resolve();
+
+        };
+
 
       transaction.onerror =
-        () => reject(
-          transaction.error
-        );
+        function(){
+
+          reject(
+            transaction.error
+          );
+
+        };
 
     }
   );
@@ -1649,7 +2644,15 @@ function saveScan(item){
 async function syncPending(){
 
   if(
-    !navigator.onLine ||
+    !navigator.onLine
+  ){
+
+    return;
+
+  }
+
+
+  if(
     syncRunning
   ){
 
@@ -1657,145 +2660,250 @@ async function syncPending(){
 
   }
 
+
   syncRunning =
     true;
+
 
   try{
 
     const pending =
       await getPending();
 
-    if(!pending.length){
+
+    if(
+      !pending.length
+    ){
 
       document.getElementById(
         'syncState'
       ).textContent =
         'SELESAI';
 
+
       document.getElementById(
         'syncInfo'
       ).textContent =
         'Tidak ada data yang menunggu.';
+
 
       document.getElementById(
         'progressBar'
       ).style.width =
         '100%';
 
+
       return;
 
     }
+
 
     document.getElementById(
       'syncState'
     ).textContent =
       'SINKRON';
 
+
+    document.getElementById(
+      'progressBar'
+    ).style.width =
+      '0%';
+
+
+    let success =
+      0;
+
+
     for(
-      let i=0;
-      i<pending.length;
-      i+=20
+      let i = 0;
+      i < pending.length;
+      i++
     ){
 
-      const batch =
-        pending.slice(
-          i,
-          i+20
-        );
-
-      const response =
-        await apiSync(
-          batch
-        );
-
       if(
-        !response ||
-        !response.ok
+        !navigator.onLine
       ){
 
-        throw new Error(
-          'Server tidak menerima batch.'
-        );
+        break;
 
       }
 
-      const results =
-        response.results || [];
 
-      for(
-        const result of results
-      ){
+      const item =
+        pending[i];
+
+
+      try{
+
+        const response =
+          await apiSyncOne(
+            item
+          );
+
 
         if(
-          result.status ===
-            'SYNCED' ||
-
-          result.status ===
-            'DUPLICATE'
+          response &&
+          response.ok
         ){
 
-          await markSynced(
-            result.transactionId
-          );
+          const results =
+            response.results ||
+            [];
+
+
+          const result =
+            results.find(
+              function(row){
+
+                return (
+                  String(
+                    row.transactionId ||
+                    ''
+                  ) ===
+                  String(
+                    item.transactionId
+                  )
+                );
+
+              }
+            );
+
+
+          /*
+           * SYNCED dan DUPLICATE
+           * sama-sama dianggap selesai.
+           *
+           * DUPLICATE berarti data sudah
+           * ada di LOG_SCAN.
+           */
+          if(
+            result &&
+            (
+              result.status ===
+                'SYNCED' ||
+
+              result.status ===
+                'DUPLICATE'
+            )
+          ){
+
+            await markSynced(
+              item.transactionId
+            );
+
+            success++;
+
+          }
+          else{
+
+            /*
+             * Jika server menjawab failed,
+             * jangan hapus data lokal.
+             */
+            console.log(
+              'Sync gagal:',
+              result
+            );
+
+          }
 
         }
 
       }
+      catch(error){
 
-      const done =
-        Math.min(
-          i + batch.length,
-          pending.length
+        /*
+         * Jangan menghapus PENDING.
+         *
+         * Loop dihentikan agar tidak
+         * membebani server jika koneksi
+         * sedang bermasalah.
+         */
+        console.log(
+          'Sync error:',
+          error
         );
+
+        break;
+
+      }
+
 
       const percent =
         Math.round(
-          done /
-          pending.length *
-          100
+          (
+            (i + 1) /
+            pending.length
+          ) * 100
         );
+
 
       document.getElementById(
         'progressBar'
       ).style.width =
         percent + '%';
 
+
       document.getElementById(
         'syncInfo'
       ).textContent =
-        done +
-        ' / ' +
+        success +
+        ' dari ' +
         pending.length +
-        ' data diproses.';
+        ' data berhasil diproses.';
 
     }
 
-    document.getElementById(
-      'syncState'
-    ).textContent =
-      'SELESAI';
 
-    document.getElementById(
-      'syncInfo'
-    ).textContent =
-      'Semua data berhasil diproses.';
+    const remaining =
+      await getPending();
+
+
+    if(
+      remaining.length === 0
+    ){
+
+      document.getElementById(
+        'syncState'
+      ).textContent =
+        'SELESAI';
+
+
+      document.getElementById(
+        'syncInfo'
+      ).textContent =
+        'Semua data sudah tersinkron ke LOG_SCAN.';
+
+
+      document.getElementById(
+        'progressBar'
+      ).style.width =
+        '100%';
+
+    }
+    else{
+
+      document.getElementById(
+        'syncState'
+      ).textContent =
+        navigator.onLine
+          ? 'TERTAHAN'
+          : 'OFFLINE';
+
+
+      document.getElementById(
+        'syncInfo'
+      ).textContent =
+        remaining.length +
+        ' data masih tersimpan di perangkat.';
+
+    }
+
 
     await updateStats();
 
-  }catch(err){
-
-    document.getElementById(
-      'syncState'
-    ).textContent =
-      'TERTAHAN';
-
-    document.getElementById(
-      'syncInfo'
-    ).textContent =
-      'Data tetap aman di perangkat. ' +
-      err.message;
-
-  }finally{
+  }
+  finally{
 
     syncRunning =
       false;
@@ -1808,13 +2916,14 @@ async function syncPending(){
 function getPending(){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
           STORE_SCAN,
           'readonly'
         );
+
 
       const request =
         transaction
@@ -1828,15 +2937,26 @@ function getPending(){
             'PENDING'
           );
 
+
       request.onsuccess =
-        () => resolve(
-          request.result || []
-        );
+        function(){
+
+          resolve(
+            request.result ||
+            []
+          );
+
+        };
+
 
       request.onerror =
-        () => reject(
-          request.error
-        );
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
 
     }
   );
@@ -1844,10 +2964,12 @@ function getPending(){
 }
 
 
-function markSynced(id){
+function markSynced(
+  transactionId
+){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
@@ -1855,27 +2977,36 @@ function markSynced(id){
           'readwrite'
         );
 
+
       const store =
         transaction.objectStore(
           STORE_SCAN
         );
 
+
       const request =
-        store.get(id);
+        store.get(
+          transactionId
+        );
+
 
       request.onsuccess =
-        () => {
+        function(){
 
           const item =
             request.result;
 
-          if(item){
+
+          if(
+            item
+          ){
 
             item.status =
               'SYNCED';
 
             item.syncedAt =
               Date.now();
+
 
             store.put(
               item
@@ -1885,13 +3016,23 @@ function markSynced(id){
 
         };
 
+
       transaction.oncomplete =
-        resolve;
+        function(){
+
+          resolve();
+
+        };
+
 
       transaction.onerror =
-        () => reject(
-          transaction.error
-        );
+        function(){
+
+          reject(
+            transaction.error
+          );
+
+        };
 
     }
   );
@@ -1900,25 +3041,33 @@ function markSynced(id){
 
 
 /* =====================================================
-   STAT
+   STATS
 ===================================================== */
 
 async function updateStats(){
 
-  const all =
+  const scans =
     await getAllScans();
+
 
   const today =
     formatDate(
       new Date()
     );
 
-  let todayCount = 0;
-  let pending = 0;
-  let synced = 0;
 
-  all.forEach(
-    item => {
+  let todayCount =
+    0;
+
+  let pending =
+    0;
+
+  let synced =
+    0;
+
+
+  scans.forEach(
+    function(item){
 
       if(
         item.tanggal ===
@@ -1929,6 +3078,7 @@ async function updateStats(){
 
       }
 
+
       if(
         item.status ===
         'PENDING'
@@ -1937,6 +3087,7 @@ async function updateStats(){
         pending++;
 
       }
+
 
       if(
         item.status ===
@@ -1950,15 +3101,18 @@ async function updateStats(){
     }
   );
 
+
   document.getElementById(
     'todayCount'
   ).textContent =
     todayCount;
 
+
   document.getElementById(
     'pendingCount'
   ).textContent =
     pending;
+
 
   document.getElementById(
     'syncedCount'
@@ -1971,13 +3125,14 @@ async function updateStats(){
 function getAllScans(){
 
   return new Promise(
-    (resolve,reject) => {
+    function(resolve,reject){
 
       const transaction =
         db.transaction(
           STORE_SCAN,
           'readonly'
         );
+
 
       const request =
         transaction
@@ -1986,15 +3141,26 @@ function getAllScans(){
           )
           .getAll();
 
+
       request.onsuccess =
-        () => resolve(
-          request.result || []
-        );
+        function(){
+
+          resolve(
+            request.result ||
+            []
+          );
+
+        };
+
 
       request.onerror =
-        () => reject(
-          request.error
-        );
+        function(){
+
+          reject(
+            request.error
+          );
+
+        };
 
     }
   );
@@ -2006,7 +3172,9 @@ function getAllScans(){
    UI
 ===================================================== */
 
-function showSuccess(item){
+function showSuccess(
+  item
+){
 
   document.getElementById(
     'result'
@@ -2015,25 +3183,57 @@ function showSuccess(item){
     '<div class="success">' +
 
       '<div class="result-name">' +
+
         '✓ ' +
-        escapeHTML(item.nama) +
+
+        escapeHTML(
+          item.nama
+        ) +
+
       '</div>' +
+
 
       '<div class="result-info">' +
+
         'ID: ' +
-        escapeHTML(item.idSiswa) +
+
+        escapeHTML(
+          item.idSiswa
+        ) +
+
         '<br>NIS: ' +
-        escapeHTML(item.nis) +
+
+        escapeHTML(
+          item.nis
+        ) +
+
         '<br>Tingkat: ' +
-        escapeHTML(item.tingkat) +
+
+        escapeHTML(
+          item.tingkat
+        ) +
+
         '<br>Jurusan: ' +
-        escapeHTML(item.jurusan) +
+
+        escapeHTML(
+          item.jurusan
+        ) +
+
       '</div>' +
 
+
       '<span class="result-mode">' +
-        escapeHTML(item.mode) +
+
+        escapeHTML(
+          item.mode
+        ) +
+
         ' • ' +
-        escapeHTML(item.jam) +
+
+        escapeHTML(
+          item.jam
+        ) +
+
       '</span>' +
 
     '</div>';
@@ -2041,73 +3241,108 @@ function showSuccess(item){
 }
 
 
-function showInfo(message){
+function showInfo(
+  message
+){
 
   document.getElementById(
     'result'
   ).innerHTML =
 
     '<div class="result-info">' +
-      escapeHTML(message) +
+
+      escapeHTML(
+        message
+      ) +
+
     '</div>';
 
 }
 
 
-function showError(message){
+function showError(
+  message
+){
 
   document.getElementById(
     'result'
   ).innerHTML =
 
     '<div class="error">' +
+
       '⚠ ' +
-      escapeHTML(message) +
+
+      escapeHTML(
+        message
+      ) +
+
     '</div>';
 
 }
 
 
+/* =====================================================
+   SOUND / VIBRATION
+===================================================== */
+
 function beep(){
 
   try{
 
-    const AC =
+    const AudioContext =
       window.AudioContext ||
       window.webkitAudioContext;
 
-    if(!AC)return;
 
-    const ctx =
-      new AC();
+    if(
+      !AudioContext
+    ){
+
+      return;
+
+    }
+
+
+    const context =
+      new AudioContext();
+
 
     const oscillator =
-      ctx.createOscillator();
+      context.createOscillator();
+
 
     const gain =
-      ctx.createGain();
+      context.createGain();
+
 
     oscillator.frequency.value =
       880;
 
+
     gain.gain.value =
       .08;
+
 
     oscillator.connect(
       gain
     );
 
+
     gain.connect(
-      ctx.destination
+      context.destination
     );
+
 
     oscillator.start();
 
+
     oscillator.stop(
-      ctx.currentTime + .12
+      context.currentTime +
+      .12
     );
 
-  }catch(e){}
+  }
+  catch(error){}
 
 }
 
@@ -2116,32 +3351,47 @@ function beepError(){
 
   try{
 
-    const AC =
+    const AudioContext =
       window.AudioContext ||
       window.webkitAudioContext;
 
-    if(!AC)return;
 
-    const ctx =
-      new AC();
+    if(
+      !AudioContext
+    ){
+
+      return;
+
+    }
+
+
+    const context =
+      new AudioContext();
+
 
     const oscillator =
-      ctx.createOscillator();
+      context.createOscillator();
+
 
     oscillator.frequency.value =
       220;
 
+
     oscillator.connect(
-      ctx.destination
+      context.destination
     );
+
 
     oscillator.start();
 
+
     oscillator.stop(
-      ctx.currentTime + .18
+      context.currentTime +
+      .18
     );
 
-  }catch(e){}
+  }
+  catch(error){}
 
 }
 
@@ -2161,43 +3411,84 @@ function vibrate(){
 }
 
 
-function formatDate(date){
+/* =====================================================
+   DATE / TIME
+===================================================== */
+
+function formatDate(
+  date
+){
 
   return (
+
     date.getFullYear() +
+
     '-' +
+
     String(
-      date.getMonth()+1
-    ).padStart(2,'0') +
+      date.getMonth() + 1
+    ).padStart(
+      2,
+      '0'
+    ) +
+
     '-' +
+
     String(
       date.getDate()
-    ).padStart(2,'0')
+    ).padStart(
+      2,
+      '0'
+    )
+
   );
 
 }
 
 
-function formatTime(date){
+function formatTime(
+  date
+){
 
   return (
+
     String(
       date.getHours()
-    ).padStart(2,'0') +
+    ).padStart(
+      2,
+      '0'
+    ) +
+
     ':' +
+
     String(
       date.getMinutes()
-    ).padStart(2,'0') +
+    ).padStart(
+      2,
+      '0'
+    ) +
+
     ':' +
+
     String(
       date.getSeconds()
-    ).padStart(2,'0')
+    ).padStart(
+      2,
+      '0'
+    )
+
   );
 
 }
 
 
-function escapeHTML(value){
+/* =====================================================
+   UTILITY
+===================================================== */
+
+function escapeHTML(
+  value
+){
 
   return String(
     value == null
@@ -2205,13 +3496,19 @@ function escapeHTML(value){
       : value
   ).replace(
     /[&<>"']/g,
-    char => ({
-      '&':'&amp;',
-      '<':'&lt;',
-      '>':'&gt;',
-      '"':'&quot;',
-      "'":'&#039;'
-    }[char])
+    function(char){
+
+      return {
+
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+
+      }[char];
+
+    }
   );
 
 }
