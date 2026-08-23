@@ -833,6 +833,26 @@ function logoutPetugas(){
 
   currentPetugas = null;
 
+  if(db){
+
+    const tx =
+      db.transaction(
+        STORE_PETUGAS,
+        'readwrite'
+      );
+
+    tx.objectStore(
+      STORE_PETUGAS
+    ).clear();
+
+  }
+
+  document.getElementById('petugasNama').textContent =
+    'Belum login';
+
+  document.getElementById('petugasId').textContent =
+    '-';
+
   document.getElementById('loginOverlay')
     .classList.remove('hidden');
 
@@ -932,7 +952,7 @@ function resetSyncedLocalData(){
     <div class="login-title">LOGIN GURU PIKET</div>
     <div class="login-subtitle">
       Masukkan nomor HP petugas untuk memulai scanner.<br>
-      Petugas yang login akan tercatat pada setiap scan.
+      Petugas yang login akan tercatat pada setiap scan.<br>Login pertama memerlukan internet; setelah itu dapat digunakan offline.
     </div>
     <label class="login-label" for="petugasPhone">Nomor HP</label>
     <input id="petugasPhone" class="login-input" type="tel" inputmode="tel"
@@ -1269,7 +1289,7 @@ function resetSyncedLocalData(){
 
   Scanner Offline • SMKN 1 Wakatobi<br>
 
-  Data scan tetap tersimpan walaupun internet mati.
+  Data scan tetap tersimpan walaupun internet mati • Petugas tercatat pada setiap scan.
 
 </div>
 
@@ -1289,13 +1309,19 @@ const DB_NAME =
 'SMKN1_SCANNER_OFFLINE';
 
 const DB_VERSION =
-2;
+3;
 
 const STORE_SCAN =
 'SCAN';
 
 const STORE_STUDENT =
 'STUDENT';
+
+const STORE_PETUGAS =
+'PETUGAS';
+
+let currentPetugas =
+null;
 
 let db =
 null;
