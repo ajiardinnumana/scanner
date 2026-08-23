@@ -1598,7 +1598,15 @@ document.addEventListener(
 
       await initDatabase();
 
-      await restorePetugasLogin();
+      try{
+        await restorePetugasLogin();
+      }
+      catch(error){
+        console.warn(
+          'Restore login dilewati:',
+          error
+        );
+      }
 
       updateNetwork();
 
